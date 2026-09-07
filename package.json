@@ -1,0 +1,34 @@
+{
+  "name": "cal_dav_calendar",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint:fix": "biome check --write",
+    "lint": "biome check",
+    "lint:full": "pnpm run lint && pnpm run lint:typecheck",
+    "lint:typecheck": "nuxi typecheck",
+    "lint:check": "biome check",
+    "lint:summary": "biome check --reporter summary"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.129",
+    "@iconify-json/simple-icons": "^1.2.94",
+    "@nuxt/ui": "^4.11.0",
+    "ical.js": "^2.2.1",
+    "node-ical": "^0.27.1",
+    "nuxt": "^4.5.2",
+    "tailwindcss": "^4.3.3",
+    "tsdav": "^2.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "dotenv": "^17.4.2",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.11"
+  },
+  "packageManager": "pnpm@12.3.4"
+}
