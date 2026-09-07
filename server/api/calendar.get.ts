@@ -3,9 +3,9 @@ import { createDAVClient } from 'tsdav'
 export default defineEventHandler(async (event) => {
   try {
     const client = await createDAVClient({
-      serverUrl: 'https://cis.technikum-wien.at/webdav/lvplan.php/principals/el26b041',
+      serverUrl: process.env.URL,
       credentials: {
-        username: 'el26b041',
+        username: process.env.USER,
         password: process.env.PASSWORD,
       },
       authMethod: 'Basic',
