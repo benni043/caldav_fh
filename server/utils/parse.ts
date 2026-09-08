@@ -1,24 +1,31 @@
 import ICAL from "ical.js";
 
 export function parseICS(ics: string) {
-  const jcal = ICAL.parse(ics);
+	const jcal = ICAL.parse(ics);
 
-  const component = new ICAL.Component(jcal);
+	const component = new ICAL.Component(jcal);
 
-  const vevent = component.getFirstSubcomponent("vevent");
+	const vevent = component.getFirstSubcomponent("vevent");
 
-  if (!vevent) {
-    return null;
-  }
+	if (!vevent) {
+		return null;
+	}
 
-  const event = new ICAL.Event(vevent);
+	const event = new ICAL.Event(vevent);
 
-  return {
-    uid: event.uid,
-    summary: event.summary,
-    description: event.description,
-    location: event.location,
-    start: event.startDate.toJSDate(),
-    end: event.endDate.toJSDate(),
-  };
+	return {
+		uid: event.uid,
+		summary: event.summary,
+		description: event.description,
+		location: event.location,
+		start: event.startDate.toJSDate(),
+		end: event.endDate.toJSDate(),
+	};
+}
+
+export function formatCalDavDate(date: Date) {
+	return date
+		.toISOString()
+		.replace(/[-:]/g, "")
+		.replace(/\.\d{3}/, "");
 }
