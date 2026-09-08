@@ -19,6 +19,7 @@
 		"@iconify-json/simple-icons": "^1.2.94",
 		"@nuxt/ui": "^4.11.0",
 		"buffer": "^6.0.3",
+		"date-fns": "^4.4.0",
 		"ical.js": "^2.2.1",
 		"nuxt": "^4.5.2",
 		"tailwindcss": "^4.3.3",
