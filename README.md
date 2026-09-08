@@ -1,5 +1,0 @@
-# ENV
-
-- URL=[caldav_fh_url]
-- USER=[cis_user]
-- PASSWORD=[cis_password]
