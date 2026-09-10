@@ -1,3 +1,12 @@
+export interface BackendCalendarEvent {
+	uid: string;
+	summary: string;
+	description: string;
+	location: string;
+	start: string;
+	end: string;
+}
+
 export interface CalendarBreak {
 	id: string;
 	start: string;
@@ -18,6 +27,8 @@ export interface CalendarEvent {
 
 	title: string;
 	subtitle?: string;
+	teacher?: string;
+	className?: string;
 	room?: string;
 
 	start: string;

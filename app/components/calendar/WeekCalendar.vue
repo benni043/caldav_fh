@@ -1,9 +1,14 @@
 <script setup lang="ts">
 	import { calendarConfig } from "~/config/calendar";
-	import { calendarEvents } from "~/data/calendar";
 
-	const { generateSegments, getSegmentHeight, getEventPosition } =
-		useCalendar(calendarConfig);
+	const {
+		generateSegments,
+		getSegmentHeight,
+		getEventPosition,
+		splitEventBySegments,
+	} = useCalendar(calendarConfig);
+
+	const { events, loading, error, fetchEvents } = useCalendarEvents();
 
 	const segments = computed(() => {
 		return generateSegments();
@@ -52,7 +57,7 @@
 	const getEventsForDay = (date: Date) => {
 		const key = dateKey(date);
 
-		return calendarEvents.filter((event) => event.date === key);
+		return events.value.filter((event) => event.date === key);
 	};
 
 	const previousWeek = () => {
@@ -82,6 +87,14 @@
 
 		currentWeek.value = date;
 	};
+
+	watch(
+		currentWeek,
+		(week) => {
+			fetchEvents(week);
+		},
+		{ immediate: true },
+	);
 </script>
 
 <template>
@@ -99,13 +112,23 @@
 				←
 			</button>
 
-			<button
-				type="button"
-				class="rounded-md px-3 py-1.5 text-sm text-neutral-300 transition hover:bg-neutral-700 hover:text-white"
-				@click="today"
-			>
-				Heute
-			</button>
+			<div class="flex items-center gap-3">
+				<button
+					type="button"
+					class="rounded-md px-3 py-1.5 text-sm text-neutral-300 transition hover:bg-neutral-700 hover:text-white"
+					@click="today"
+				>
+					Heute
+				</button>
+
+				<span v-if="loading" class="text-xs text-neutral-500">
+					Lade Kalender...
+				</span>
+
+				<span v-if="error" class="text-xs text-red-400">
+					Kalender konnte nicht geladen werden.
+				</span>
+			</div>
 
 			<button
 				type="button"
@@ -116,8 +139,10 @@
 			</button>
 		</div>
 
+		<!-- Kalender -->
 		<div class="overflow-x-auto">
-			<div class="min-w-[1050px]">
+			<div class="min-w-262.5">
+				<!-- Header -->
 				<div
 					class="grid grid-cols-[70px_repeat(5,minmax(190px,1fr))] border-b border-neutral-700"
 				>
@@ -179,12 +204,9 @@
 						:events="getEventsForDay(day)"
 						:config="calendarConfig"
 						:segments="segments"
-						:get-segment-height="
-              getSegmentHeight
-            "
-						:get-event-position="
-              getEventPosition
-            "
+						:get-segment-height="getSegmentHeight"
+						:get-event-position="getEventPosition"
+						:split-event-by-segments="splitEventBySegments"
 					/>
 				</div>
 			</div>

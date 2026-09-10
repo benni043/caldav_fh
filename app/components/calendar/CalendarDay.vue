@@ -16,15 +16,17 @@
 			end: string,
 			segments: CalendarSegment[],
 		) => Record<string, string>;
+		splitEventBySegments: (
+			event: CalendarEvent,
+			segments: CalendarSegment[],
+		) => CalendarEvent[];
 	}>();
 
-	computed(() => {
-		const year = props.date.getFullYear();
-		const month = String(props.date.getMonth() + 1).padStart(2, "0");
-		const day = String(props.date.getDate()).padStart(2, "0");
-
-		return `${year}-${month}-${day}`;
-	});
+	const displayEvents = computed(() =>
+		props.events.flatMap((event) =>
+			props.splitEventBySegments(event, props.segments),
+		),
+	);
 </script>
 
 <template>
@@ -45,14 +47,14 @@
 				v-if="segment.type === 'break'"
 				class="flex h-full items-center justify-center"
 			>
-				<span class="text-xs font-medium text-neutral-300">
+				<span v-if="segment.label" class="text-xs font-medium text-neutral-300">
 					{{ segment.label }}
 				</span>
 			</div>
 		</div>
 
 		<CalendarEvent
-			v-for="event in events"
+			v-for="event in displayEvents"
 			:key="event.id"
 			:event="event"
 			:style="

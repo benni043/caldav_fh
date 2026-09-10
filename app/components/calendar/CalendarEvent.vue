@@ -12,19 +12,24 @@
 		class="absolute left-1 right-1 z-20 overflow-hidden rounded-md border border-black/20 px-2 py-1.5 text-xs text-white shadow-sm"
 		:style="{
       ...style,
-      backgroundColor: event.color ?? '#6366f1',
+      backgroundColor:
+        event.color ?? '#6366f1',
     }"
 	>
 		<div class="font-semibold">
 			{{ event.title }}
 		</div>
 
-		<div v-if="event.subtitle" class="opacity-95">
-			{{ event.subtitle }}
-		</div>
-
 		<div v-if="event.room" class="opacity-95">
 			{{ event.room }}
+		</div>
+
+		<div v-if="event.teacher" class="opacity-95">
+			{{ event.teacher }}
+		</div>
+
+		<div v-if="event.className" class="opacity-95">
+			{{ event.className }}
 		</div>
 
 		<div class="mt-1 text-[10px] opacity-80">

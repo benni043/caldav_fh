@@ -1,4 +1,8 @@
-import type { CalendarConfig, CalendarSegment } from "~/types/calendar";
+import type {
+	CalendarConfig,
+	CalendarEvent,
+	CalendarSegment,
+} from "~/types/calendar";
 
 export function useCalendar(config: CalendarConfig) {
 	const timeToMinutes = (time: string): number => {
@@ -74,6 +78,48 @@ export function useCalendar(config: CalendarConfig) {
 		return segments;
 	};
 
+	const splitEventBySegments = (
+		event: CalendarEvent,
+		segments: CalendarSegment[],
+	): CalendarEvent[] => {
+		const eventStart = timeToMinutes(event.start);
+		const eventEnd = timeToMinutes(event.end);
+
+		const parts: CalendarEvent[] = [];
+
+		for (const segment of segments) {
+			if (segment.type === "break") {
+				continue;
+			}
+
+			const segmentStart = timeToMinutes(segment.start);
+			const segmentEnd = timeToMinutes(segment.end);
+
+			if (eventEnd <= segmentStart || eventStart >= segmentEnd) {
+				continue;
+			}
+
+			const partStart = Math.max(eventStart, segmentStart);
+
+			const partEnd = Math.min(eventEnd, segmentEnd);
+
+			if (partStart >= partEnd) {
+				continue;
+			}
+
+			parts.push({
+				...event,
+
+				id: `${event.id}-${segment.start}`,
+
+				start: minutesToTime(partStart),
+				end: minutesToTime(partEnd),
+			});
+		}
+
+		return parts;
+	};
+
 	const pixelsPerMinute = 1.8;
 
 	const getSegmentHeight = (segment: CalendarSegment) => {
@@ -111,7 +157,6 @@ export function useCalendar(config: CalendarConfig) {
 
 		for (const segment of segments) {
 			const segmentStart = timeToMinutes(segment.start);
-
 			const segmentEnd = timeToMinutes(segment.end);
 
 			const segmentHeight = getSegmentHeight(segment);
@@ -152,6 +197,8 @@ export function useCalendar(config: CalendarConfig) {
 		minutesToTime,
 
 		generateSegments,
+		splitEventBySegments,
+
 		getSegmentHeight,
 		getEventPosition,
 	};
