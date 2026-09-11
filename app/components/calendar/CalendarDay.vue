@@ -42,16 +42,7 @@
 			:style="{
         height: `${getSegmentHeight(segment)}px`,
       }"
-		>
-			<div
-				v-if="segment.type === 'break'"
-				class="flex h-full items-center justify-center"
-			>
-				<span v-if="segment.label" class="text-xs font-medium text-neutral-300">
-					{{ segment.label }}
-				</span>
-			</div>
-		</div>
+		/>
 
 		<CalendarEvent
 			v-for="event in displayEvents"

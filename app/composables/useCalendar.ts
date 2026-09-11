@@ -133,6 +133,7 @@ export function useCalendar(config: CalendarConfig) {
 		eventStart: string,
 		eventEnd: string,
 		segments: CalendarSegment[],
+		heightResolver: (segment: CalendarSegment) => number = getSegmentHeight,
 	) => {
 		let top = 0;
 
@@ -142,7 +143,7 @@ export function useCalendar(config: CalendarConfig) {
 		for (const segment of segments) {
 			const segmentEnd = timeToMinutes(segment.end);
 
-			const height = getSegmentHeight(segment);
+			const height = heightResolver(segment);
 
 			if (start >= segmentEnd) {
 				top += height;
@@ -157,9 +158,10 @@ export function useCalendar(config: CalendarConfig) {
 
 		for (const segment of segments) {
 			const segmentStart = timeToMinutes(segment.start);
+
 			const segmentEnd = timeToMinutes(segment.end);
 
-			const segmentHeight = getSegmentHeight(segment);
+			const segmentHeight = heightResolver(segment);
 
 			if (end <= segmentStart) {
 				break;

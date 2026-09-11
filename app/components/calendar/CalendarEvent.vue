@@ -9,30 +9,29 @@
 
 <template>
 	<div
-		class="absolute left-1 right-1 z-20 overflow-hidden rounded-md border border-black/20 px-2 py-1.5 text-xs text-white shadow-sm"
+		class="absolute left-0.5 right-0.5 z-20 overflow-hidden rounded border border-black/20 px-1 py-1 text-[9px] leading-tight text-white shadow-sm sm:left-1 sm:right-1 sm:rounded-md sm:px-2 sm:py-1.5 sm:text-xs"
 		:style="{
       ...style,
-      backgroundColor:
-        event.color ?? '#6366f1',
+      backgroundColor: event.color ?? '#6366f1',
     }"
 	>
-		<div class="font-semibold">
+		<div class="truncate font-semibold">
 			{{ event.title }}
 		</div>
 
-		<div v-if="event.room" class="opacity-95">
+		<div v-if="event.room" class="hidden truncate opacity-95 sm:block">
 			{{ event.room }}
 		</div>
 
-		<div v-if="event.teacher" class="opacity-95">
+		<div v-if="event.teacher" class="hidden truncate opacity-95 sm:block">
 			{{ event.teacher }}
 		</div>
 
-		<div v-if="event.className" class="opacity-95">
+		<div v-if="event.className" class="hidden truncate opacity-95 sm:block">
 			{{ event.className }}
 		</div>
 
-		<div class="mt-1 text-[10px] opacity-80">
+		<div class="mt-0.5 text-[7px] opacity-80 sm:mt-1 sm:text-[10px]">
 			{{ event.start }} - {{ event.end }}
 		</div>
 	</div>
