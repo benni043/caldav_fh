@@ -9,7 +9,7 @@
 
 <template>
 	<div
-		class="absolute inset-x-0 z-20 py-2 box-border overflow-hidden rounded border border-black/20 text-center text-[9px] leading-tight text-black sm:rounded-md sm:text-sm"
+		class="absolute inset-x-0 z-20 py-2 box-border overflow-hidden rounded border border-black/20 text-center text-[12px] leading-tight text-black sm:rounded-md sm:text-sm"
 		:style="{
       ...style,
       backgroundColor:

@@ -2,7 +2,7 @@
 </script>
 
 <template>
-	<main class="min-h-screen bg-[#1d2021]">
+	<main>
 		<CalendarWeekCalendar />
 	</main>
 </template>
