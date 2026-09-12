@@ -58,23 +58,31 @@ const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 
 const getEventColor = (title: string) => {
 	if (title.includes("KOKO")) {
-		return "#d526d5";
+		return "#FF31FF";
+	}
+
+	if (title.includes("PHY1")) {
+		return "#31FFFF";
 	}
 
 	if (title.includes("PHY")) {
-		return "#e7a51b";
+		return "#FFC53B";
 	}
 
-	if (title.includes("DIGSYS")) {
-		return "#4b9bd1";
+	if (title.includes("DIGSYS") || title.includes("ASTEC")) {
+		return "#F5F5F5";
 	}
 
 	if (title.includes("MAES")) {
-		return "#65a85c";
+		return "#645EFF";
 	}
 
 	if (title.includes("ACDC")) {
-		return "#8c62c7";
+		return "#FFFF08";
+	}
+
+	if (title.includes("ENG")) {
+		return "#F50505";
 	}
 
 	return "#64748b";
