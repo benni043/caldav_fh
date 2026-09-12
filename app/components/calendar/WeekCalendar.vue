@@ -85,18 +85,6 @@
 		currentWeek.value = date;
 	};
 
-	const today = () => {
-		const date = new Date();
-
-		const day = date.getDay();
-
-		const mondayOffset = day === 0 ? -6 : 1 - day;
-
-		date.setDate(date.getDate() + mondayOffset);
-
-		currentWeek.value = date;
-	};
-
 	const calendarBody = ref<HTMLElement | null>(null);
 
 	const timeColumn = ref<HTMLElement | null>(null);
@@ -196,13 +184,7 @@
 			</button>
 
 			<div class="flex items-center gap-1.5 sm:gap-3">
-				<button
-					type="button"
-					class="rounded-md px-2 py-1 text-sm text-neutral-300 transition hover:bg-neutral-700 hover:text-white sm:px-3 sm:py-1.5"
-					@click="today"
-				>
-					Heute
-				</button>
+        <span></span>
 
 				<span v-if="loading" class="hidden text-xs text-neutral-500 sm:block">
 					Lade Kalender...
@@ -232,13 +214,13 @@
 					<div
 						v-for="day in days"
 						:key="dateKey(day)"
-						class="border-l border-neutral-700 px-0.5 py-1.5 text-center sm:px-3 sm:py-3"
+						class="border-l border-neutral-700 text-center py-1"
 					>
-						<div class="text-xs font-semibold text-white sm:hidden">
+						<div class="font-semibold text-white sm:hidden">
 							{{ formatDayShort(day) }}
 						</div>
 
-						<div class="text-[11px] text-neutral-400 sm:hidden">
+						<div class="text-neutral-400 sm:hidden">
 							{{ day.getDate() }}
 						</div>
 
@@ -271,7 +253,7 @@
 						>
 							<template v-if="segment.type === 'lesson'">
 								<div
-									class="flex h-full flex-col items-end justify-between py-1 pr-1 text-[9px] leading-none sm:py-2 sm:pr-2 sm:text-xs"
+									class="flex h-full flex-col items-center justify-between py-1 leading-none"
 								>
 									<span>
 										{{ segment.start }}
@@ -280,14 +262,6 @@
 									<span>
 										{{ segment.end }}
 									</span>
-								</div>
-							</template>
-
-							<template v-else>
-								<div
-									class="flex h-full items-center justify-end pr-1 text-[8px] text-neutral-300 sm:pr-2 sm:text-[10px]"
-								>
-									{{ segment.start }}
 								</div>
 							</template>
 						</div>
