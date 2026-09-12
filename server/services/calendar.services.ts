@@ -4,7 +4,7 @@ import { formatCalDavDate, parseICS } from "#server/utils/parse.ts";
 
 interface GetCalendarEventsOptions {
 	url: string;
-	USER: string;
+	user: string;
 	password: string;
 	from: Date;
 	to: Date;
@@ -16,7 +16,7 @@ interface CalendarResponse {
 
 export async function getCalendarEvents({
 	url,
-	USER,
+	user,
 	password,
 	from,
 	to,
