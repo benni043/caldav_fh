@@ -4,7 +4,7 @@ import { formatCalDavDate, parseICS } from "#server/utils/parse.ts";
 
 interface GetCalendarEventsOptions {
 	url: string;
-	username: string;
+	USER: string;
 	password: string;
 	from: Date;
 	to: Date;
@@ -16,20 +16,20 @@ interface CalendarResponse {
 
 export async function getCalendarEvents({
 	url,
-	username,
+	USER,
 	password,
 	from,
 	to,
 }: GetCalendarEventsOptions) {
 	const auth = Buffer.from(
-		`${process.env.username}:${process.env.password}`,
+		`${process.env.USER}:${process.env.PASSWORD}`,
 	).toString("base64");
 
 	const client = await createDAVClient({
-		serverUrl: process.env.url!,
+		serverUrl: process.env.URL!,
 		credentials: {
-			username: process.env.username,
-			password: process.env.password,
+			username: process.env.USER,
+			password: process.env.PASSWORD,
 		},
 		authMethod: "Basic",
 		defaultAccountType: "caldav",

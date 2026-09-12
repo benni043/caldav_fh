@@ -19,8 +19,4 @@ export default defineNuxtConfig({
 		fallback: "light",
 		classSuffix: "",
 	},
-
-	runtimeConfig: {
-		public: {},
-	},
 });
