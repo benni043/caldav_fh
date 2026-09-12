@@ -21,13 +21,15 @@ export async function getCalendarEvents({
 	from,
 	to,
 }: GetCalendarEventsOptions) {
-	const auth = Buffer.from(`${username}:${password}`).toString("base64");
+	const auth = Buffer.from(
+		`${process.env.username}:${process.env.password}`,
+	).toString("base64");
 
 	const client = await createDAVClient({
-		serverUrl: url,
+		serverUrl: process.env.url!,
 		credentials: {
-			username,
-			password,
+			username: process.env.username,
+			password: process.env.password,
 		},
 		authMethod: "Basic",
 		defaultAccountType: "caldav",

@@ -16,12 +16,6 @@
 		return generateSegments();
 	});
 
-	/**
-	 * Gibt den Montag der Woche zurück.
-	 *
-	 * Samstag und Sonntag gehören bereits
-	 * zur kommenden Woche.
-	 */
 	const getCurrentCalendarWeek = () => {
 		const date = new Date();
 

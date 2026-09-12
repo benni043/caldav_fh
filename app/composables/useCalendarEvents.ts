@@ -89,7 +89,6 @@ const getEventColor = (title: string) => {
 };
 
 export const useCalendarEvents = () => {
-	const runtimeConfig = useRuntimeConfig();
 	const events = ref<CalendarEvent[]>([]);
 
 	const loading = ref(false);
@@ -100,10 +99,10 @@ export const useCalendarEvents = () => {
 		error.value = null;
 
 		try {
-			const url = runtimeConfig.public.url;
+			const url = "url";
 
-			const username = runtimeConfig.public.username;
-			const password = runtimeConfig.public.password;
+			const username = "username";
+			const password = "password";
 
 			const monday = startOfWeek(week, {
 				weekStartsOn: 1,

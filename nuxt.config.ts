@@ -21,10 +21,6 @@ export default defineNuxtConfig({
 	},
 
 	runtimeConfig: {
-		public: {
-			url: process.env.NUXT_URL,
-			username: process.env.NUXT_USERNAME,
-			password: process.env.NUXT_PASSWORD,
-		},
+		public: {},
 	},
 });
