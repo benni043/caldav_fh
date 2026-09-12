@@ -1,176 +1,296 @@
 <script setup lang="ts">
-	import { calendarConfig } from "~/config/calendar";
-	import type { CalendarSegment } from "~/types/calendar";
+import { getISOWeek } from "date-fns";
+import { calendarConfig } from "~/config/calendar";
+import type { CalendarSegment } from "~/types/calendar";
 
-	const {
-		generateSegments,
-		getSegmentHeight,
-		getEventPosition,
-		splitEventBySegments,
-	} = useCalendar(calendarConfig);
+const {
+  generateSegments,
+  getSegmentHeight,
+  getEventPosition,
+  splitEventBySegments,
+} = useCalendar(calendarConfig);
 
-	const { events, loading, error, fetchEvents } = useCalendarEvents();
+const {
+  events,
+  loading,
+  error,
+  fetchEvents,
+} = useCalendarEvents();
 
-	const segments = computed(() => {
-		return generateSegments();
-	});
+const segments = computed(() => {
+  return generateSegments();
+});
 
-	const currentWeek = ref(new Date("2026-09-14"));
+/**
+ * Gibt den Montag der Woche zurück.
+ *
+ * Samstag und Sonntag gehören bereits
+ * zur kommenden Woche.
+ */
+const getCurrentCalendarWeek = () => {
+  const date = new Date();
 
-	const days = computed(() => {
-		const result: Date[] = [];
+  const day = date.getDay();
 
-		for (let i = 0; i < 5; i++) {
-			const date = new Date(currentWeek.value);
+  if (day === 6) {
+    date.setDate(date.getDate() + 2);
+  } else if (day === 0) {
+    date.setDate(date.getDate() + 1);
+  } else {
+    const mondayOffset = 1 - day;
 
-			date.setDate(currentWeek.value.getDate() + i);
+    date.setDate(
+      date.getDate() + mondayOffset,
+    );
+  }
 
-			result.push(date);
-		}
+  date.setHours(0, 0, 0, 0);
 
-		return result;
-	});
+  return date;
+};
 
-	const dateKey = (date: Date) => {
-		const year = date.getFullYear();
+const currentWeek = ref(
+  getCurrentCalendarWeek(),
+);
 
-		const month = String(date.getMonth() + 1).padStart(2, "0");
+const days = computed(() => {
+  const result: Date[] = [];
 
-		const day = String(date.getDate()).padStart(2, "0");
+  for (let i = 0; i < 5; i++) {
+    const date = new Date(
+      currentWeek.value,
+    );
 
-		return `${year}-${month}-${day}`;
-	};
+    date.setDate(
+      currentWeek.value.getDate() + i,
+    );
 
-	const formatDay = (date: Date) => {
-		return date.toLocaleDateString("de-AT", {
-			weekday: "long",
-		});
-	};
+    result.push(date);
+  }
 
-	const formatDayShort = (date: Date) => {
-		const value = date.toLocaleDateString("de-AT", {
-			weekday: "short",
-		});
+  return result;
+});
 
-		return value.endsWith(".") ? value : `${value}.`;
-	};
+const dateKey = (date: Date) => {
+  const year = date.getFullYear();
 
-	const formatDate = (date: Date) => {
-		return date.toLocaleDateString("de-AT", {
-			day: "2-digit",
-			month: "2-digit",
-			year: "numeric",
-		});
-	};
+  const month = String(
+    date.getMonth() + 1,
+  ).padStart(2, "0");
 
-	const getEventsForDay = (date: Date) => {
-		const key = dateKey(date);
+  const day = String(
+    date.getDate(),
+  ).padStart(2, "0");
 
-		return events.value.filter((event) => event.date === key);
-	};
+  return `${year}-${month}-${day}`;
+};
 
-	const previousWeek = () => {
-		const date = new Date(currentWeek.value);
+const formatDay = (date: Date) => {
+  return date.toLocaleDateString(
+    "de-AT",
+    {
+      weekday: "long",
+    },
+  );
+};
 
-		date.setDate(date.getDate() - 7);
+const formatDayShort = (date: Date) => {
+  const value = date.toLocaleDateString(
+    "de-AT",
+    {
+      weekday: "short",
+    },
+  );
 
-		currentWeek.value = date;
-	};
+  return value.endsWith(".")
+    ? value
+    : `${value}.`;
+};
 
-	const nextWeek = () => {
-		const date = new Date(currentWeek.value);
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString(
+    "de-AT",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    },
+  );
+};
 
-		date.setDate(date.getDate() + 7);
+const formatMonth = (date: Date) => {
+  const value = date.toLocaleDateString(
+    "de-AT",
+    {
+      month: "short",
+    },
+  );
 
-		currentWeek.value = date;
-	};
+  return value.endsWith(".")
+    ? value
+    : `${value}.`;
+};
 
-	const calendarBody = ref<HTMLElement | null>(null);
+const calendarWeek = computed(() => {
+  return getISOWeek(
+    currentWeek.value,
+  );
+});
 
-	const timeColumn = ref<HTMLElement | null>(null);
+const getEventsForDay = (
+  date: Date,
+) => {
+  const key = dateKey(date);
 
-	const dayWidth = ref(0);
+  return events.value.filter(
+    (event) => event.date === key,
+  );
+};
 
-	let resizeObserver: ResizeObserver | null = null;
+const previousWeek = () => {
+  const date = new Date(
+    currentWeek.value,
+  );
 
-	const updateDayWidth = () => {
-		if (!calendarBody.value || !timeColumn.value) {
-			return;
-		}
+  date.setDate(
+    date.getDate() - 7,
+  );
 
-		const totalWidth = calendarBody.value.getBoundingClientRect().width;
+  currentWeek.value = date;
+};
 
-		const timeWidth = timeColumn.value.getBoundingClientRect().width;
+const nextWeek = () => {
+  const date = new Date(
+    currentWeek.value,
+  );
 
-		const width = (totalWidth - timeWidth) / 5;
+  date.setDate(
+    date.getDate() + 7,
+  );
 
-		if (width > 0) {
-			dayWidth.value = width;
-		}
-	};
+  currentWeek.value = date;
+};
 
-	const getResponsiveSegmentHeight = (segment: CalendarSegment) => {
-		if (isMobile.value && segment.type === "lesson" && dayWidth.value > 0) {
-			return dayWidth.value;
-		}
+const calendarBody =
+  ref<HTMLElement | null>(null);
 
-		return getSegmentHeight(segment);
-	};
+const timeColumn =
+  ref<HTMLElement | null>(null);
 
-	const getResponsiveEventPosition = (
-		start: string,
-		end: string,
-		segments: CalendarSegment[],
-	) => {
-		return getEventPosition(start, end, segments, getResponsiveSegmentHeight);
-	};
+const dayWidth = ref(0);
 
-	const isMobile = ref(false);
+let resizeObserver:
+  | ResizeObserver
+  | null = null;
 
-	const updateMobileState = () => {
-		isMobile.value = window.innerWidth < 640;
-	};
+const isMobile = ref(false);
 
-	onMounted(() => {
-		updateMobileState();
+const updateMobileState = () => {
+  isMobile.value =
+    window.innerWidth < 640;
+};
 
-		window.addEventListener("resize", updateMobileState);
+const updateDayWidth = () => {
+  if (
+    !calendarBody.value ||
+    !timeColumn.value
+  ) {
+    return;
+  }
 
-		updateDayWidth();
+  const totalWidth =
+    calendarBody.value.getBoundingClientRect()
+      .width;
 
-		resizeObserver = new ResizeObserver(() => {
-			updateDayWidth();
-		});
+  const timeWidth =
+    timeColumn.value.getBoundingClientRect()
+      .width;
 
-		if (calendarBody.value) {
-			resizeObserver.observe(calendarBody.value);
-		}
+  const width =
+    (totalWidth - timeWidth) / 5;
 
-		if (timeColumn.value) {
-			resizeObserver.observe(timeColumn.value);
-		}
-	});
+  if (width > 0) {
+    dayWidth.value = width;
+  }
+};
 
-	onBeforeUnmount(() => {
-		resizeObserver?.disconnect();
+const getResponsiveSegmentHeight = (
+  segment: CalendarSegment,
+) => {
+  if (
+    isMobile.value &&
+    segment.type === "lesson" &&
+    dayWidth.value > 0
+  ) {
+    return dayWidth.value;
+  }
 
-		window.removeEventListener("resize", updateMobileState);
-	});
+  return getSegmentHeight(segment);
+};
 
-	watch(
-		currentWeek,
-		(week) => {
-			fetchEvents(week);
-		},
-		{
-			immediate: true,
-		},
-	);
+const getResponsiveEventPosition = (
+  start: string,
+  end: string,
+  segments: CalendarSegment[],
+) => {
+  return getEventPosition(
+    start,
+    end,
+    segments,
+    getResponsiveSegmentHeight,
+  );
+};
+
+onMounted(() => {
+  updateMobileState();
+  updateDayWidth();
+
+  window.addEventListener(
+    "resize",
+    updateMobileState,
+  );
+
+  resizeObserver =
+    new ResizeObserver(() => {
+      updateDayWidth();
+    });
+
+  if (calendarBody.value) {
+    resizeObserver.observe(
+      calendarBody.value,
+    );
+  }
+
+  if (timeColumn.value) {
+    resizeObserver.observe(
+      timeColumn.value,
+    );
+  }
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+
+  window.removeEventListener(
+    "resize",
+    updateMobileState,
+  );
+});
+
+watch(
+  currentWeek,
+  (week) => {
+    fetchEvents(week);
+  },
+  {
+    immediate: true,
+  },
+);
 </script>
 
 <template>
 	<div
-		class="flex flex-col overflow-hidden rounded-xl border border-neutral-700 bg-[#242829]"
+		class="flex flex-col overflow-hidden rounded-xl  bg-[#242829]"
 	>
 		<div
 			class="flex items-center justify-between border-b border-neutral-700 px-2 py-1.5 sm:px-3 sm:py-2"
@@ -184,7 +304,12 @@
 			</button>
 
 			<div class="flex items-center gap-1.5 sm:gap-3">
-        <span></span>
+        <span
+          class="text-neutral-300 sm:block"
+        >
+          Kalenderwoche:
+          {{ calendarWeek }}
+        </span>
 
 				<span v-if="loading" class="hidden text-xs text-neutral-500 sm:block">
 					Lade Kalender...
@@ -209,7 +334,11 @@
 				<div
 					class="grid grid-cols-[42px_repeat(5,minmax(0,1fr))] border-b border-neutral-700 sm:grid-cols-[70px_repeat(5,minmax(190px,1fr))]"
 				>
-					<div />
+          <div
+            class="flex items-center justify-center  border-neutral-700 font-medium text-neutral-400"
+          >
+            {{ formatMonth(currentWeek) }}
+          </div>
 
 					<div
 						v-for="day in days"
