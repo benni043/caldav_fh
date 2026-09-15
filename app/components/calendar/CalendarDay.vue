@@ -78,16 +78,18 @@
 			@click="selectedEvent = event"
 		/>
 
-		<div
-			class="absolute w-full h-1 z-30"
-			:class="{
-					'bg-red-500/60': isToday,
-					'bg-neutral-700/60': !isToday
-				}"
-			:style="{
-					...getTimePostion(now, segments),
-    }"
-		/>
+		<ClientOnly>
+			<div
+				class="absolute w-full h-1 z-30"
+				:class="{
+          'bg-red-500/60': isToday,
+          'bg-neutral-700/60': !isToday,
+        }"
+				:style="{
+          ...getTimePostion(now, segments),
+        }"
+			/>
+		</ClientOnly>
 
 		<UModal
 			v-model:open="modalOpen"
