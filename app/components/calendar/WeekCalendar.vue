@@ -1,9 +1,9 @@
 <script setup lang="ts">
-	import { getISOWeek } from "date-fns";
-	import { calendarConfig } from "~/config/calendar";
-	import type { CalendarSegment } from "~/types/calendar";
+import {getISOWeek} from "date-fns";
+import {calendarConfig} from "~/config/calendar";
+import type {CalendarSegment} from "~/types/calendar";
 
-	const {
+const {
 		generateSegments,
 		getSegmentHeight,
 		getEventPosition,
@@ -86,11 +86,9 @@
 	};
 
 	const formatMonth = (date: Date) => {
-		const value = date.toLocaleDateString("de-AT", {
-			month: "short",
-		});
-
-		return value.endsWith(".") ? value : `${value}.`;
+    return date.toLocaleDateString("de-AT", {
+      month: "short",
+    });
 	};
 
 	const calendarWeek = computed(() => {
@@ -212,11 +210,6 @@
 			</button>
 
 			<div class="flex items-center gap-1.5 sm:gap-3">
-				<span v-if="!error" class="text-neutral-300 sm:block">
-					Kalenderwoche:
-					{{ calendarWeek }}
-				</span>
-
 				<span v-if="loading" class="text-xs text-neutral-500 sm:block">
 					Lade Kalender...
 				</span>
@@ -234,13 +227,15 @@
 				→
 			</button>
 		</div>
+
 		<div
 			class="bg-neutral-800 grid grid-cols-[52px_repeat(5,minmax(0,1fr))] border-b border-neutral-700 sm:grid-cols-[70px_repeat(5,minmax(190px,1fr))]"
 		>
 			<div
-				class="flex items-center justify-center border-neutral-700 font-medium text-neutral-400"
+				class="border-l border-neutral-700 text-center py-1"
 			>
-				{{ formatMonth(currentWeek) }}
+        <div class="text-neutral-400">KW {{ calendarWeek }}</div>
+				<div class="font-semibold text-white">{{ formatMonth(currentWeek) }}</div>
 			</div>
 
 			<div
@@ -265,6 +260,7 @@
 				</div>
 			</div>
 		</div>
+
 		<div class="overflow-auto">
 			<div class="min-w-0 sm:min-w-262.5">
 				<div
