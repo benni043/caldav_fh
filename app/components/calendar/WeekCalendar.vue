@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {getISOWeek} from "date-fns";
-import {calendarConfig} from "~/config/calendar";
-import type {CalendarSegment} from "~/types/calendar";
+	import { getISOWeek } from "date-fns";
+	import { calendarConfig } from "~/config/calendar";
+	import type { CalendarSegment } from "~/types/calendar";
 
-const {
+	const {
 		generateSegments,
 		getSegmentHeight,
 		getEventPosition,
@@ -86,9 +86,9 @@ const {
 	};
 
 	const formatMonth = (date: Date) => {
-    return date.toLocaleDateString("de-AT", {
-      month: "short",
-    });
+		return date.toLocaleDateString("de-AT", {
+			month: "short",
+		});
 	};
 
 	const calendarWeek = computed(() => {
@@ -231,11 +231,11 @@ const {
 		<div
 			class="bg-neutral-800 grid grid-cols-[52px_repeat(5,minmax(0,1fr))] border-b border-neutral-700 sm:grid-cols-[70px_repeat(5,minmax(190px,1fr))]"
 		>
-			<div
-				class="border-l border-neutral-700 text-center py-1"
-			>
-        <div class="text-neutral-400">KW {{ calendarWeek }}</div>
-				<div class="font-semibold text-white">{{ formatMonth(currentWeek) }}</div>
+			<div class="border-l border-neutral-700 text-center py-1">
+				<div class="text-white">KW {{ calendarWeek }}</div>
+				<div class="text-neutral-400">
+					{{ formatMonth(currentWeek) }}
+				</div>
 			</div>
 
 			<div
@@ -243,7 +243,7 @@ const {
 				:key="dateKey(day)"
 				class="border-l border-neutral-700 text-center py-1"
 			>
-				<div class="font-semibold text-white sm:hidden">
+				<div class="text-white sm:hidden">
 					{{ formatDayShort(day) }}
 				</div>
 
@@ -251,7 +251,7 @@ const {
 					{{ day.getDate() }}
 				</div>
 
-				<div class="hidden font-semibold capitalize text-white sm:block">
+				<div class="hidden capitalize text-white sm:block">
 					{{ formatDay(day) }}
 				</div>
 
