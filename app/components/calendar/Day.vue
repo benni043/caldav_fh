@@ -20,7 +20,7 @@
 			event: CalendarEvent,
 			segments: CalendarSegment[],
 		) => CalendarEvent[];
-		getTimePostion: (
+		getTimePosition: (
 			time: Date,
 			segments: CalendarSegment[],
 		) => Record<string, string>;
@@ -64,14 +64,14 @@
 			:key="`${segment.type}-${segment.start}-${segment.end}`"
 			class="relative border-b border-neutral-700"
 			:class="{
-				'bg-neutral-500/70': segment.type === 'break',
+				'bg-neutral-500': segment.type === 'break',
 			}"
 			:style="{
 				height: `${getSegmentHeight(segment)}px`,
 			}"
 		/>
 
-		<CalendarEvent
+		<CalendarEntry
 			v-for="event in displayEvents"
 			:key="event.id"
 			:event="event"
@@ -89,23 +89,16 @@
 			<div
 				class="absolute w-full h-1 z-30"
 				:class="{
-          'bg-red-500/60': isToday,
-          'bg-neutral-700/60': !isToday,
+          'bg-red-700': isToday,
+          'bg-neutral-700': !isToday,
         }"
 				:style="{
-          ...getTimePostion(now, segments),
+          ...getTimePosition(now, segments),
         }"
 			/>
 		</ClientOnly>
 
-		<UModal
-			v-model:open="modalOpen"
-			:title="selectedEvent?.title"
-			:ui="{
-				overlay: 'transition-opacity duration-200',
-				content: 'transition-all duration-200',
-			}"
-		>
+		<UModal v-model:open="modalOpen" :title="selectedEvent?.title">
 			<template #body>
 				<div v-if="selectedEvent?.room">
 					<strong>Raum:</strong>

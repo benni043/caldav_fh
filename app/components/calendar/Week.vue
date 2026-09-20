@@ -312,7 +312,7 @@
 						:split-event-by-segments="
               splitEventBySegments
             "
-						:get-time-postion="getResponsiveTimePosition"
+						:get-time-position="getResponsiveTimePosition"
 					/>
 				</div>
 			</div>
