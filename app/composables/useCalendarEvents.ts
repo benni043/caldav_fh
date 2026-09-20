@@ -1,4 +1,5 @@
 import { addDays, startOfWeek } from "date-fns";
+import { taskLineIds } from "~/config/calendar.ts";
 import type { BackendCalendarEvent, CalendarEvent } from "~/types/calendar";
 
 const timeZone = "Europe/Vienna";
@@ -67,6 +68,10 @@ const getEventColor = (title: string) => {
 	return "#64748b";
 };
 
+const getTasklineId = (lesson: string) => {
+	return taskLineIds.find((value) => value.lesson === lesson);
+};
+
 const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 	const parsed = parseDescription(event.description);
 
@@ -85,6 +90,7 @@ const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 		end: getLocalTime(event.end),
 
 		color: getEventColor(parsed.title),
+		tasklineId: getTasklineId(parsed.title)!.id,
 	};
 };
 

@@ -109,6 +109,16 @@
 					<strong>Lehrer:</strong>
 					{{ selectedEvent.teacher }}
 				</div>
+
+				<div>
+					<NuxtLink
+						:to="`https://taskline.tobinio.dev/?org=c9e4c18f-59d5-4645-a145-66bc5b5709f6&category=${selectedEvent?.tasklineId}`"
+						external
+						target="_blank"
+					>
+						Taskline
+					</NuxtLink>
+				</div>
 			</template>
 		</UModal>
 	</div>

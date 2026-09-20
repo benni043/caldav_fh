@@ -35,6 +35,7 @@ export interface CalendarEvent {
 	end: string;
 
 	color?: string;
+	tasklineId: string;
 }
 
 export interface CalendarSegment {
@@ -46,4 +47,9 @@ export interface CalendarSegment {
 	label?: string;
 
 	duration: number;
+}
+
+export interface TaskLineId {
+	id: string;
+	lesson: string;
 }
