@@ -1,4 +1,4 @@
-import {addDays, endOfDay, startOfDay, startOfWeek} from "date-fns";
+import { addDays, endOfDay, startOfDay } from "date-fns";
 import type { BackendCalendarEvent, CalendarEvent } from "~/types/calendar";
 
 const timeZone = "Europe/Vienna";
@@ -89,47 +89,47 @@ const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 };
 
 export const useCalendarEvents = (weeks: Ref<[Date, Date, Date]>) => {
-  const url = "url";
-  const username = "username";
-  const password = "password";
+	const url = "url";
+	const username = "username";
+	const password = "password";
 
-  const { data, pending, error, refresh } = useAsyncData(
-    "calendar-events",
-    async () => {
-      const results = await Promise.all(
-        weeks.value.map((monday) => {
-          const from = startOfDay(monday);
-          const to = endOfDay(addDays(from, 5));
+	const { data, pending, error, refresh } = useAsyncData(
+		"calendar-events",
+		async () => {
+			const results = await Promise.all(
+				weeks.value.map((monday) => {
+					const from = startOfDay(monday);
+					const to = endOfDay(addDays(from, 5));
 
-          return $fetch<BackendCalendarEvent[]>("/api/calendar", {
-            query: {
-              url,
-              from: from.toISOString(),
-              to: to.toISOString(),
-            },
-            headers: {
-              Authorization: `Basic ${btoa(`${username}:${password}`)}`,
-            },
-          });
-        }),
-      );
+					return $fetch<BackendCalendarEvent[]>("/api/calendar", {
+						query: {
+							url,
+							from: from.toISOString(),
+							to: to.toISOString(),
+						},
+						headers: {
+							Authorization: `Basic ${btoa(`${username}:${password}`)}`,
+						},
+					});
+				}),
+			);
 
-      return results.flat();
-    },
-    {
-      watch: [weeks],
-      default: () => [],
-    },
-  );
+			return results.flat();
+		},
+		{
+			watch: [weeks],
+			default: () => [],
+		},
+	);
 
-  const events = computed<CalendarEvent[]>(() =>
-    data.value.map(transformEvent),
-  );
+	const events = computed<CalendarEvent[]>(() =>
+		data.value.map(transformEvent),
+	);
 
-  return {
-    events,
-    loading: pending,
-    error,
-    refresh,
-  };
+	return {
+		events,
+		loading: pending,
+		error,
+		refresh,
+	};
 };

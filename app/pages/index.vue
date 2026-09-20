@@ -3,6 +3,6 @@
 
 <template>
 	<main>
-		<Calendar />
+		<CalendarWeek />
 	</main>
 </template>

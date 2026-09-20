@@ -71,7 +71,7 @@
 			}"
 		/>
 
-		<CalendarEvent
+		<CalendarEntry
 			v-for="event in displayEvents"
 			:key="event.id"
 			:event="event"
