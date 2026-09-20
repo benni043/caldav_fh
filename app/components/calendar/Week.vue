@@ -11,12 +11,9 @@
 		splitEventBySegments,
 	} = useCalendar(calendarConfig);
 
-	// FIX: Es gibt nur noch EINEN Scroll-Container (scrollerEl). Die Kopfzeile scrollt
-	// dadurch nativ mit dem Inhalt mit, ohne JS-Synchronisierung (die hinterherhinkte).
 	const scrollerEl = ref<HTMLElement | null>(null);
 	const timeColumn = ref<HTMLElement | null>(null);
 
-	// Breite einer Woche in px (= sichtbare Breite ohne Zeitspalte)
 	const weekWidth = ref(0);
 	const dayWidth = computed(() => weekWidth.value / 5);
 
@@ -47,7 +44,6 @@
 		}
 	};
 
-	// Abstand zwischen zwei Wochen im Scroller (tatsächliche Breite inkl. min-width am Desktop)
 	function getWeekStep() {
 		const el = scrollerEl.value;
 		const time = timeColumn.value;
@@ -79,12 +75,10 @@
 
 		index === 0 ? goToPreviousWeek() : goToNextWeek();
 
-		// FIX: nextTick statt requestAnimationFrame -> neu zentrieren, bevor der Browser zeichnet
 		await nextTick();
 		centerScroll("instant");
 	}
 
-	// Breite geändert (Initialisierung, Resize, Drehen) -> wieder auf die mittlere Woche springen
 	watch(weekWidth, async () => {
 		await nextTick();
 		centerScroll("instant");
@@ -286,24 +280,17 @@
 			</button>
 		</div>
 
-		<!--
-      FIX: EIN Scroll-Container für beide Achsen.
-      - --time-w: Breite der Zeitspalte (an einer Stelle definiert)
-      - snap-x + scroll-pl: Wochen rasten direkt rechts neben der Zeitspalte ein
-    -->
 		<div
 			ref="scrollerEl"
-			class="flex-1 min-h-0 overflow-auto snap-x snap-mandatory overscroll-x-contain scroll-pl-[var(--time-w)] [--time-w:52px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+			class="flex-1 min-h-0 overflow-auto snap-x snap-mandatory overscroll-x-contain scroll-pl-(--time-w) [--time-w:52px] scrollbar-none [&::-webkit-scrollbar]:hidden"
 		>
-			<!-- w-max min-w-full: Zeile ist so breit wie alle Wochen, damit sticky left funktioniert -->
 			<div class="flex w-max min-w-full">
-				<!-- Zeitspalte: bleibt beim seitlichen Wischen links stehen -->
 				<div
 					ref="timeColumn"
-					class="sticky left-0 z-20 w-[var(--time-w)] shrink-0 bg-neutral-800"
+					class="sticky left-0 z-20 w-(--time-w) shrink-0 bg-neutral-800"
 				>
 					<div
-						class="sticky top-0 z-10 flex justify-center bg-neutral-800 border-b border-neutral-700 h-[58px] shadow-[0_-4px_0_0_var(--color-neutral-800)]"
+						class="sticky top-0 z-10 flex justify-center bg-neutral-800 border-b border-neutral-700 h-14.5 shadow-[0_-4px_0_0_var(--color-neutral-800)]"
 					>
 						<div
 							class="flex items-center justify-center border-neutral-700 font-medium text-neutral-400"
@@ -338,19 +325,10 @@
 					</div>
 				</div>
 
-				<!--
-          Jede Woche bringt ihre eigene Kopfzeile mit -> Kopfzeile und Inhalt
-          sind im selben Scroll-Container und bewegen sich immer exakt gleich.
-          isolate: z-Indizes aus CalendarDay bleiben innerhalb der Woche und
-          können weder Kopfzeile noch Zeitspalte überdecken.
-          :key = Index (NICHT das Datum): Die drei Wochen-Elemente müssen an ihrer
-          Position bleiben. Würde Vue sie nach einem Wochenwechsel verschieben,
-          rastet der Browser auf das verschobene Element zurück und springt.
-        -->
 				<div
 					v-for="(week, weekIndex) in daySeries"
 					:key="weekIndex"
-					class="isolate shrink-0 snap-start w-[calc(100vw-var(--time-w))] sm:min-w-[998px] bg-neutral-800 border-b border-neutral-700"
+					class="isolate shrink-0 snap-start w-[calc(100vw-var(--time-w))] sm:min-w-249.5 bg-neutral-800 border-b border-neutral-700"
 					:style="weekStyle"
 				>
 					<div
@@ -359,7 +337,7 @@
 						<div
 							v-for="day in week"
 							:key="dateKey(day)"
-							class="border-l border-b border-neutral-700 text-center py-1 h-[58px] bg-neutral-800"
+							class="border-l border-b border-neutral-700 text-center py-1 h-14.5 bg-neutral-800"
 						>
 							<div class="font-semibold text-white sm:hidden">
 								{{ formatDayShort(day) }}
