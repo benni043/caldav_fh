@@ -316,7 +316,7 @@
 						:key="`${segment.type}-${segment.start}-${segment.end}`"
 						class="border-b border-neutral-700 text-neutral-400"
 						:class="{
-              'bg-neutral-500/70': segment.type === 'break',
+              'bg-neutral-500': segment.type === 'break',
             }"
 						:style="{
               height: `${getResponsiveSegmentHeight(segment)}px`,
@@ -392,7 +392,7 @@
 							:get-segment-height="getResponsiveSegmentHeight"
 							:get-event-position="getResponsiveEventPosition"
 							:split-event-by-segments="splitEventBySegments"
-							:get-time-postion="getResponsiveTimePosition"
+							:get-time-position="getResponsiveTimePosition"
 						/>
 					</div>
 				</div>
