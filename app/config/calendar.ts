@@ -1,4 +1,4 @@
-import type { CalendarConfig, TaskLineId } from "~/types/calendar";
+import type { CalendarConfig, UrlId } from "~/types/calendar";
 
 export const calendarConfig: CalendarConfig = {
 	startTime: "08:00",
@@ -48,7 +48,7 @@ export const calendarConfig: CalendarConfig = {
 	],
 };
 
-export const taskLineIds: TaskLineId[] = [
+export const taskLineIds: UrlId[] = [
 	{
 		id: "5586dfca-0146-4c6a-b55c-284f69bfccb0",
 		lesson: "KOKO-UE",
@@ -75,6 +75,37 @@ export const taskLineIds: TaskLineId[] = [
 	},
 	{
 		id: "86d7b82c-5c70-4791-b251-6eb93c596ce0",
+		lesson: "DIGSYS-ILV",
+	},
+];
+
+export const moodleIds: UrlId[] = [
+	{
+		id: "34212",
+		lesson: "KOKO-UE",
+	},
+	{
+		id: "33744",
+		lesson: "MAES1-ILV",
+	},
+	{
+		id: "34714",
+		lesson: "PHYLB-LAB",
+	},
+	{
+		id: "33646",
+		lesson: "PHY1-ILV",
+	},
+	{
+		id: "34196",
+		lesson: "ACDC-ILV",
+	},
+	{
+		id: "34203",
+		lesson: "ENG1-UE",
+	},
+	{
+		id: "34360",
 		lesson: "DIGSYS-ILV",
 	},
 ];

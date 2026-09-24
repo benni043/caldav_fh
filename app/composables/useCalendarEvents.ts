@@ -1,5 +1,5 @@
 import { addDays, startOfWeek } from "date-fns";
-import { taskLineIds } from "~/config/calendar.ts";
+import { moodleIds, taskLineIds } from "~/config/calendar.ts";
 import type { BackendCalendarEvent, CalendarEvent } from "~/types/calendar";
 
 const timeZone = "Europe/Vienna";
@@ -72,6 +72,10 @@ const getTasklineId = (lesson: string) => {
 	return taskLineIds.find((value) => value.lesson === lesson);
 };
 
+const getMoodleId = (lesson: string) => {
+	return moodleIds.find((value) => value.lesson === lesson);
+};
+
 const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 	const parsed = parseDescription(event.description);
 
@@ -91,6 +95,7 @@ const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 
 		color: getEventColor(parsed.title),
 		tasklineId: getTasklineId(parsed.title)!.id,
+		mooddleId: getMoodleId(parsed.title)!.id,
 	};
 };
 

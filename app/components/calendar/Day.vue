@@ -110,13 +110,24 @@
 					{{ selectedEvent.teacher }}
 				</div>
 
-				<div>
+				<div class="flex gap-2">
 					<NuxtLink
 						:to="`https://taskline.tobinio.dev/?org=c9e4c18f-59d5-4645-a145-66bc5b5709f6&category=${selectedEvent?.tasklineId}`"
 						external
 						target="_blank"
+						class="flex gap-0.5 items-center"
 					>
+						<UIcon name="ci:external-link" class="size-5" />
 						Taskline
+					</NuxtLink>
+					<NuxtLink
+						:to="`https://moodle.technikum-wien.at/course/view.php?id=${selectedEvent?.mooddleId}`"
+						external
+						target="_blank"
+						class="flex gap-0.5 items-center"
+					>
+						<UIcon name="ci:external-link" class="size-5" />
+						Moodle
 					</NuxtLink>
 				</div>
 			</template>
