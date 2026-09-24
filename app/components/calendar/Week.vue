@@ -273,7 +273,7 @@
 							:key="`${segment.type}-${segment.start}-${segment.end}`"
 							class="border-b border-neutral-700 text-neutral-400"
 							:class="{
-                'bg-neutral-500/70':
+                'bg-neutral-500':
                   segment.type === 'break',
               }"
 							:style="{
