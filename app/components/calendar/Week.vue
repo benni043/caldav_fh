@@ -9,27 +9,8 @@
 		getEventPosition,
 		getTimePosition,
 		splitEventBySegments,
+		getCurrentCalendarWeek,
 	} = useCalendar(calendarConfig);
-
-	const getCurrentCalendarWeek = () => {
-		const date = new Date();
-
-		const day = date.getDay();
-
-		if (day === 6) {
-			date.setDate(date.getDate() + 2);
-		} else if (day === 0) {
-			date.setDate(date.getDate() + 1);
-		} else {
-			const mondayOffset = 1 - day;
-
-			date.setDate(date.getDate() + mondayOffset);
-		}
-
-		date.setHours(0, 0, 0, 0);
-
-		return date;
-	};
 
 	const currentWeek = ref(getCurrentCalendarWeek());
 

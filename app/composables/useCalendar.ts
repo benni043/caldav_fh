@@ -1,245 +1,312 @@
+import { get } from "@nuxt/ui/runtime/utils/index.js";
+import { format } from "date-fns/fp";
 import type {
-	CalendarConfig,
-	CalendarEvent,
-	CalendarSegment,
+  CalendarConfig,
+  CalendarEvent,
+  CalendarSegment,
 } from "~/types/calendar";
 
 export function useCalendar(config: CalendarConfig) {
-	const timeToMinutes = (time: string): number => {
-		const [hours, minutes] = time.split(":").map(Number);
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(":").map(Number);
 
-		return hours! * 60 + minutes!;
-	};
+    return hours! * 60 + minutes!;
+  };
 
-	const minutesToTime = (minutes: number): string => {
-		const hours = Math.floor(minutes / 60);
-		const remainingMinutes = minutes % 60;
+  const getCurrentCalendarWeek = (): Date => {
+    const date = new Date();
 
-		return `${String(hours).padStart(2, "0")}:${String(
-			remainingMinutes,
-		).padStart(2, "0")}`;
-	};
+    const day = date.getDay();
 
-	const dateToMinutes = (date: Date): number => {
-		return date.getMinutes() + date.getHours() * 60;
-	};
+    if (day === 6) {
+      date.setDate(date.getDate() + 2);
+    } else if (day === 0) {
+      date.setDate(date.getDate() + 1);
+    } else {
+      const mondayOffset = 1 - day;
 
-	const generateSegments = (): CalendarSegment[] => {
-		const segments: CalendarSegment[] = [];
+      date.setDate(date.getDate() + mondayOffset);
+    }
 
-		let current = timeToMinutes(config.startTime);
-		const end = timeToMinutes(config.endTime);
+    date.setHours(0, 0, 0, 0);
 
-		while (current < end) {
-			const currentBreak = config.breaks.find(
-				(breakItem) => timeToMinutes(breakItem.start) === current,
-			);
+    return date;
+  };
 
-			if (currentBreak) {
-				const breakStart = timeToMinutes(currentBreak.start);
-				const breakEnd = timeToMinutes(currentBreak.end);
+  const minutesToTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
 
-				segments.push({
-					type: "break",
-					start: currentBreak.start,
-					end: currentBreak.end,
-					label: currentBreak.label,
-					duration: breakEnd - breakStart,
-				});
+    return `${String(hours).padStart(2, "0")}:${String(
+      remainingMinutes,
+    ).padStart(2, "0")}`;
+  };
 
-				current = breakEnd;
+  const dateToMinutes = (date: Date): number => {
+    return date.getMinutes() + date.getHours() * 60;
+  };
 
-				continue;
-			}
+  const generateSegments = (): CalendarSegment[] => {
+    const segments: CalendarSegment[] = [];
 
-			const nextBreak = config.breaks
-				.map((breakItem) => ({
-					...breakItem,
-					startMinutes: timeToMinutes(breakItem.start),
-					endMinutes: timeToMinutes(breakItem.end),
-				}))
-				.filter((breakItem) => breakItem.startMinutes > current)
-				.sort((a, b) => a.startMinutes - b.startMinutes)[0];
+    let current = timeToMinutes(config.startTime);
+    const end = timeToMinutes(config.endTime);
 
-			let lessonEnd = current + config.lessonDuration;
+    while (current < end) {
+      const currentBreak = config.breaks.find(
+        (breakItem) => timeToMinutes(breakItem.start) === current,
+      );
 
-			if (nextBreak && nextBreak.startMinutes < lessonEnd) {
-				lessonEnd = nextBreak.startMinutes;
-			}
+      if (currentBreak) {
+        const breakStart = timeToMinutes(currentBreak.start);
+        const breakEnd = timeToMinutes(currentBreak.end);
 
-			lessonEnd = Math.min(lessonEnd, end);
+        segments.push({
+          type: "break",
+          start: currentBreak.start,
+          end: currentBreak.end,
+          label: currentBreak.label,
+          duration: breakEnd - breakStart,
+        });
 
-			segments.push({
-				type: "lesson",
-				start: minutesToTime(current),
-				end: minutesToTime(lessonEnd),
-				duration: lessonEnd - current,
-			});
+        current = breakEnd;
 
-			current = lessonEnd;
-		}
+        continue;
+      }
 
-		return segments;
-	};
+      const nextBreak = config.breaks
+        .map((breakItem) => ({
+          ...breakItem,
+          startMinutes: timeToMinutes(breakItem.start),
+          endMinutes: timeToMinutes(breakItem.end),
+        }))
+        .filter((breakItem) => breakItem.startMinutes > current)
+        .sort((a, b) => a.startMinutes - b.startMinutes)[0];
 
-	const splitEventBySegments = (
-		event: CalendarEvent,
-		segments: CalendarSegment[],
-	): CalendarEvent[] => {
-		const eventStart = timeToMinutes(event.start);
-		const eventEnd = timeToMinutes(event.end);
+      let lessonEnd = current + config.lessonDuration;
 
-		const parts: CalendarEvent[] = [];
+      if (nextBreak && nextBreak.startMinutes < lessonEnd) {
+        lessonEnd = nextBreak.startMinutes;
+      }
 
-		for (const segment of segments) {
-			if (segment.type === "break") {
-				continue;
-			}
+      lessonEnd = Math.min(lessonEnd, end);
 
-			const segmentStart = timeToMinutes(segment.start);
-			const segmentEnd = timeToMinutes(segment.end);
+      segments.push({
+        type: "lesson",
+        start: minutesToTime(current),
+        end: minutesToTime(lessonEnd),
+        duration: lessonEnd - current,
+      });
 
-			if (eventEnd <= segmentStart || eventStart >= segmentEnd) {
-				continue;
-			}
+      current = lessonEnd;
+    }
 
-			const partStart = Math.max(eventStart, segmentStart);
+    return segments;
+  };
 
-			const partEnd = Math.min(eventEnd, segmentEnd);
+  const splitEventBySegments = (
+    event: CalendarEvent,
+    segments: CalendarSegment[],
+  ): CalendarEvent[] => {
+    const eventStart = timeToMinutes(event.start);
+    const eventEnd = timeToMinutes(event.end);
 
-			if (partStart >= partEnd) {
-				continue;
-			}
+    const parts: CalendarEvent[] = [];
 
-			parts.push({
-				...event,
+    for (const segment of segments) {
+      if (segment.type === "break") {
+        continue;
+      }
 
-				id: `${event.id}-${segment.start}`,
+      const segmentStart = timeToMinutes(segment.start);
+      const segmentEnd = timeToMinutes(segment.end);
 
-				start: minutesToTime(partStart),
-				end: minutesToTime(partEnd),
-			});
-		}
+      if (eventEnd <= segmentStart || eventStart >= segmentEnd) {
+        continue;
+      }
 
-		return parts;
-	};
+      const partStart = Math.max(eventStart, segmentStart);
 
-	const pixelsPerMinute = 1.8;
+      const partEnd = Math.min(eventEnd, segmentEnd);
 
-	const getSegmentHeight = (segment: CalendarSegment) => {
-		return Math.max(
-			segment.duration * pixelsPerMinute,
-			segment.type === "lesson" ? 70 : 18,
-		);
-	};
+      if (partStart >= partEnd) {
+        continue;
+      }
 
-	const getTimePosition = (
-		time: Date,
-		segments: CalendarSegment[],
-		heightResolver: (segment: CalendarSegment) => number = getSegmentHeight,
-	) => {
-		const minutes = dateToMinutes(time);
+      parts.push({
+        ...event,
 
-		let top = 0;
+        id: `${event.id}-${segment.start}`,
 
-		for (const segment of segments) {
-			const segmentStart = timeToMinutes(segment.start);
-			const segmentEnd = timeToMinutes(segment.end);
-			const segmentHeight = heightResolver(segment);
+        start: minutesToTime(partStart),
+        end: minutesToTime(partEnd),
+      });
+    }
 
-			if (minutes >= segmentEnd) {
-				top += segmentHeight;
-				continue;
-			}
+    return parts;
+  };
 
-			if (minutes >= segmentStart) {
-				const segmentDuration = segmentEnd - segmentStart;
+  const pixelsPerMinute = 1.8;
 
-				top += ((minutes - segmentStart) / segmentDuration) * segmentHeight;
-			}
+  const getSegmentHeight = (segment: CalendarSegment) => {
+    return Math.max(
+      segment.duration * pixelsPerMinute,
+      segment.type === "lesson" ? 70 : 18,
+    );
+  };
 
-			break;
-		}
+  const getTimePosition = (
+    time: Date,
+    segments: CalendarSegment[],
+    heightResolver: (segment: CalendarSegment) => number = getSegmentHeight,
+  ) => {
+    const minutes = dateToMinutes(time);
 
-		return {
-			top: `${top}px`,
-		};
-	};
+    let top = 0;
 
-	const getEventPosition = (
-		eventStart: string,
-		eventEnd: string,
-		segments: CalendarSegment[],
-		heightResolver: (segment: CalendarSegment) => number = getSegmentHeight,
-	) => {
-		let top = 0;
+    for (const segment of segments) {
+      const segmentStart = timeToMinutes(segment.start);
+      const segmentEnd = timeToMinutes(segment.end);
+      const segmentHeight = heightResolver(segment);
 
-		const start = timeToMinutes(eventStart);
-		const end = timeToMinutes(eventEnd);
+      if (minutes >= segmentEnd) {
+        top += segmentHeight;
+        continue;
+      }
 
-		for (const segment of segments) {
-			const segmentEnd = timeToMinutes(segment.end);
+      if (minutes >= segmentStart) {
+        const segmentDuration = segmentEnd - segmentStart;
 
-			const height = heightResolver(segment);
+        top += ((minutes - segmentStart) / segmentDuration) * segmentHeight;
+      }
 
-			if (start >= segmentEnd) {
-				top += height;
-				continue;
-			}
+      break;
+    }
 
-			break;
-		}
+    return {
+      top: `${top}px`,
+    };
+  };
 
-		let height = 0;
-		let started = false;
+  const getEventPosition = (
+    eventStart: string,
+    eventEnd: string,
+    segments: CalendarSegment[],
+    heightResolver: (segment: CalendarSegment) => number = getSegmentHeight,
+  ) => {
+    let top = 0;
 
-		for (const segment of segments) {
-			const segmentStart = timeToMinutes(segment.start);
+    const start = timeToMinutes(eventStart);
+    const end = timeToMinutes(eventEnd);
 
-			const segmentEnd = timeToMinutes(segment.end);
+    for (const segment of segments) {
+      const segmentEnd = timeToMinutes(segment.end);
 
-			const segmentHeight = heightResolver(segment);
+      const height = heightResolver(segment);
 
-			if (end <= segmentStart) {
-				break;
-			}
+      if (start >= segmentEnd) {
+        top += height;
+        continue;
+      }
 
-			if (start < segmentEnd && end > segmentStart) {
-				const overlapStart = Math.max(start, segmentStart);
+      break;
+    }
 
-				const overlapEnd = Math.min(end, segmentEnd);
+    let height = 0;
+    let started = false;
 
-				if (!started) {
-					top +=
-						((overlapStart - segmentStart) / (segmentEnd - segmentStart)) *
-						segmentHeight;
+    for (const segment of segments) {
+      const segmentStart = timeToMinutes(segment.start);
 
-					started = true;
-				}
+      const segmentEnd = timeToMinutes(segment.end);
 
-				height +=
-					((overlapEnd - overlapStart) / (segmentEnd - segmentStart)) *
-					segmentHeight;
-			} else if (started) {
-				break;
-			}
-		}
+      const segmentHeight = heightResolver(segment);
 
-		return {
-			top: `${top}px`,
-			height: `${height}px`,
-		};
-	};
+      if (end <= segmentStart) {
+        break;
+      }
 
-	return {
-		timeToMinutes,
-		minutesToTime,
+      if (start < segmentEnd && end > segmentStart) {
+        const overlapStart = Math.max(start, segmentStart);
 
-		generateSegments,
-		splitEventBySegments,
+        const overlapEnd = Math.min(end, segmentEnd);
 
-		getSegmentHeight,
-		getEventPosition,
-		getTimePosition,
-	};
+        if (!started) {
+          top +=
+            ((overlapStart - segmentStart) / (segmentEnd - segmentStart)) *
+            segmentHeight;
+
+          started = true;
+        }
+
+        height +=
+          ((overlapEnd - overlapStart) / (segmentEnd - segmentStart)) *
+          segmentHeight;
+      } else if (started) {
+        break;
+      }
+    }
+
+    return {
+      top: `${top}px`,
+      height: `${height}px`,
+    };
+  };
+
+  const dateKey = (date: Date) => {
+    const year = date.getFullYear();
+
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDay = (date: Date) => {
+    return date.toLocaleDateString("de-AT", {
+      weekday: "long",
+    });
+  };
+
+  const formatDayShort = (date: Date) => {
+    const value = date.toLocaleDateString("de-AT", {
+      weekday: "short",
+    });
+
+    return value.endsWith(".") ? value : `${value}.`;
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("de-AT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const formatMonth = (date: Date) => {
+    return date.toLocaleDateString("de-AT", {
+      month: "short",
+    });
+  };
+
+  return {
+    timeToMinutes,
+    minutesToTime,
+
+    generateSegments,
+    splitEventBySegments,
+
+    getSegmentHeight,
+    getEventPosition,
+    getTimePosition,
+
+    getCurrentCalendarWeek,
+    formatDay,
+    formatDayShort,
+    formatDate,
+    formatMonth,
+    dateKey,
+  };
 }
