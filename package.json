@@ -15,22 +15,22 @@
 		"lint:summary": "biome check --reporter summary"
 	},
 	"dependencies": {
-		"@iconify-json/lucide": "^1.2.132",
-		"@iconify-json/simple-icons": "^1.2.96",
-		"@nuxt/ui": "^4.11.1",
+		"@iconify-json/lucide": "^1.2.137",
+		"@iconify-json/simple-icons": "^1.2.97",
+		"@nuxt/ui": "^4.11.2",
 		"buffer": "^6.0.3",
 		"date-fns": "^4.4.0",
 		"ical.js": "^2.2.1",
 		"nuxt": "^4.5.2",
 		"tailwindcss": "^4.3.3",
-		"tsdav": "^2.3.3"
+		"tsdav": "^2.3.4"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.5.13",
-		"@types/node": "^22.20.2",
+		"@biomejs/biome": "^2.5.14",
+		"@types/node": "^22.20.4",
 		"dotenv": "^17.4.2",
 		"typescript": "^6.0.3",
 		"vue-tsc": "^3.3.11"
 	},
-	"packageManager": "pnpm@12.4.2"
+	"packageManager": "pnpm@12.6.0"
 }
