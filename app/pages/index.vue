@@ -33,7 +33,6 @@ const dynamicSections = ref<Section[]>([
 ]);
 
 const sliderRef = ref<HTMLElement | null>(null);
-let isUpdating = false;
 
 onMounted(() => {
   if (sliderRef.value) {
@@ -42,39 +41,19 @@ onMounted(() => {
 });
 
 async function handleScroll(event: Event) {
-  if (isUpdating) return;
-
   const target = event.target as HTMLElement;
   const sectionWidth = target.clientWidth;
 
   const isAtEnd =
     target.scrollLeft + target.clientWidth >= target.scrollWidth - 10;
-  const isAtBegin = target.scrollLeft <= 10;
+  const isAtBegin = target.scrollLeft <= 0;
 
   if (isAtEnd) {
-    isUpdating = true;
-
-    dynamicSections.value.shift();
     dynamicSections.value.push(fetchNextSectionFromApi());
-
-    await nextTick();
-    target.scrollLeft -= sectionWidth;
-
-    setTimeout(() => {
-      isUpdating = false;
-    }, 50);
   } else if (isAtBegin) {
-    isUpdating = true;
-
-    dynamicSections.value.pop();
     dynamicSections.value.unshift(fetchNextSectionFromApi());
 
-    await nextTick();
     target.scrollLeft += sectionWidth;
-
-    setTimeout(() => {
-      isUpdating = false;
-    }, 50);
   }
 }
 
@@ -172,7 +151,7 @@ const getResponsiveTimePosition = (time: Date, segments: CalendarSegment[]) => {
     <div class="flex flex-1 h-[calc(100vh-60px)] overflow-hidden">
       <aside class="w-[60px] h-full z-10">
         <div
-          class="h-[60px] bg-neutral-800 border-b border-neutral-700 flex flex-col items-center justify-center"
+          class="h-[60px] bg-neutral-800 border-b border-r border-neutral-700 flex flex-col items-center justify-center"
         >
           <div class="text-white">KW {{ calendarWeek }}</div>
           <div class="text-neutral-400">
@@ -184,7 +163,7 @@ const getResponsiveTimePosition = (time: Date, segments: CalendarSegment[]) => {
           <div
             v-for="segment in segments"
             :key="`${segment.type}-${segment.start}-${segment.end}`"
-            class="border-b border-neutral-700 text-neutral-400"
+            class="border-b border-r border-neutral-700 text-neutral-400"
             :class="{
               'bg-neutral-500': segment.type === 'break',
             }"
@@ -225,7 +204,7 @@ const getResponsiveTimePosition = (time: Date, segments: CalendarSegment[]) => {
             <div
               v-for="day in days"
               :key="dateKey(day)"
-              class="border-l border-neutral-700 flex flex-col justify-center"
+              class="border-neutral-700 border-r flex flex-col justify-center"
             >
               <div class="text-white sm:hidden">
                 {{ formatDayShort(day) }}
