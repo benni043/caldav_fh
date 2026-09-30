@@ -196,10 +196,10 @@ const getResponsiveTimePosition = (time: Date, segments: CalendarSegment[]) => {
         <section
           v-for="section in dynamicSections"
           :key="section.id"
-          class="w-full h-full snap-start text-center relative overflow-y-auto scrollbar-none shrink-0"
+          class="w-full h-full snap-start text-center relative shrink-0"
         >
           <div
-            class="sticky top-0 z-30 h-[60px] bg-neutral-800 grid grid-cols-5 border-b border-neutral-700"
+            class="absolute top-0 left-0 right-0 z-30 h-[60px] bg-neutral-800 grid grid-cols-5 border-b border-neutral-700"
           >
             <div
               v-for="day in days"
@@ -224,21 +224,23 @@ const getResponsiveTimePosition = (time: Date, segments: CalendarSegment[]) => {
             </div>
           </div>
 
-          <div class="overflow-auto">
-            <div class="min-w-0 sm:min-w-262.5">
-              <div ref="calendarBody" class="grid grid-cols-5">
-                <CalendarDay
-                  v-for="day in days"
-                  :key="dateKey(day)"
-                  :date="day"
-                  :events="getEventsForDay(day)"
-                  :config="calendarConfig"
-                  :segments="segments"
-                  :get-segment-height="getResponsiveSegmentHeight"
-                  :get-event-position="getResponsiveEventPosition"
-                  :split-event-by-segments="splitEventBySegments"
-                  :get-time-position="getResponsiveTimePosition"
-                />
+          <div class="h-full overflow-y-auto scrollbar-none pt-[60px]">
+            <div class="overflow-auto">
+              <div class="min-w-0 sm:min-w-262.5">
+                <div ref="calendarBody" class="grid grid-cols-5">
+                  <CalendarDay
+                    v-for="day in days"
+                    :key="dateKey(day)"
+                    :date="day"
+                    :events="getEventsForDay(day)"
+                    :config="calendarConfig"
+                    :segments="segments"
+                    :get-segment-height="getResponsiveSegmentHeight"
+                    :get-event-position="getResponsiveEventPosition"
+                    :split-event-by-segments="splitEventBySegments"
+                    :get-time-position="getResponsiveTimePosition"
+                  />
+                </div>
               </div>
             </div>
           </div>
