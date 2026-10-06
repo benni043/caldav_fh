@@ -138,17 +138,17 @@ export const useCalendarEvents = (weeks: Ref<Date[]>) => {
 		}
 	};
 
-	if (import.meta.client) {
-		watch(
-			weeks,
-			(value) => {
-				for (const week of value) {
-					loadWeek(week);
-				}
-			},
-			{ immediate: true, deep: true },
-		);
-	}
+	const loadWeeks = (value: Date[]) => {
+		for (const week of value) {
+			loadWeek(week);
+		}
+	};
+
+	// Start loading after mount so the hydrated DOM matches the server render
+	onMounted(() => {
+		loadWeeks(weeks.value);
+		watch(weeks, loadWeeks, { deep: true });
+	});
 
 	const getEventsForDay = (date: Date) => {
 		const key = format(date, "yyyy-MM-dd");
