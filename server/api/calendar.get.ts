@@ -1,41 +1,16 @@
-import { Buffer } from "buffer";
 import { getCalendarEvents } from "#server/services/calendar.services.ts";
 
-export default defineCachedFunction(
+export default defineCachedEventHandler(
 	async (event) => {
-		const authorization = getHeader(event, "authorization");
-
-		if (!authorization?.startsWith("Basic ")) {
-			throw createError({
-				statusCode: 401,
-				statusMessage: "Authorization header missing",
-			});
-		}
-
-		const encoded = authorization.slice(6);
-		const decoded = Buffer.from(encoded, "base64").toString("utf-8");
-		const separator = decoded.indexOf(":");
-
-		if (separator === -1) {
-			throw createError({
-				statusCode: 401,
-				statusMessage: "Invalid authorization header",
-			});
-		}
-
-		const username = decoded.slice(0, separator);
-		const password = decoded.slice(separator + 1);
-
 		const query = getQuery(event);
 
-		const url = query.url as string;
 		const from = query.from as string;
 		const to = query.to as string;
 
-		if (!url || !from || !to) {
+		if (!from || !to) {
 			throw createError({
 				statusCode: 400,
-				statusMessage: "Url, from and to must be specified",
+				statusMessage: "From and to must be specified",
 			});
 		}
 
@@ -57,13 +32,7 @@ export default defineCachedFunction(
 		}
 
 		try {
-			return await getCalendarEvents({
-				url,
-				username,
-				password,
-				from: fromDate,
-				to: toDate,
-			});
+			return await getCalendarEvents({ from: fromDate, to: toDate });
 		} catch (error: unknown) {
 			console.error("CalDAV error:", error);
 
@@ -73,5 +42,5 @@ export default defineCachedFunction(
 			});
 		}
 	},
-	{ maxAge: 60 * 15 /* 15 minutes */, swr: true },
+	{ maxAge: 60 * 15, swr: true },
 );

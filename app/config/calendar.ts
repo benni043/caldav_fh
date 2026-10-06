@@ -28,19 +28,19 @@ export const calendarConfig: CalendarConfig = {
 			label: "Pause",
 		},
 		{
-			id: "break-3",
+			id: "break-4",
 			start: "16:00",
 			end: "16:10",
 			label: "Pause",
 		},
 		{
-			id: "break-3",
+			id: "break-5",
 			start: "17:40",
 			end: "17:50",
 			label: "Pause",
 		},
 		{
-			id: "break-3",
+			id: "break-6",
 			start: "19:20",
 			end: "19:30",
 			label: "Pause",

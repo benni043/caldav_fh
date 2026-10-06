@@ -1,5 +1,3 @@
-import { get } from "@nuxt/ui/runtime/utils/index.js";
-import { format } from "date-fns/fp";
 import type {
 	CalendarConfig,
 	CalendarEvent,

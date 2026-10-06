@@ -1,261 +1,246 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from "vue";
+	import { addWeeks, getISOWeek } from "date-fns";
+	import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+	import { calendarConfig } from "~/config/calendar";
 
-interface Section {
-  id: number;
-  title: string;
-  items: (string | number)[];
-}
+	const {
+		generateSegments,
+		getSegmentHeight,
+		getCurrentCalendarWeek,
+		formatDay,
+		formatDayShort,
+		formatDate,
+		formatMonth,
+		dateKey,
+	} = useCalendar(calendarConfig);
 
-let sectionCounter = 1;
+	const getWeekWindow = (center: Date) => [
+		addWeeks(center, -1),
+		center,
+		addWeeks(center, 1),
+	];
 
-function createSection(title: string, items: (string | number)[]): Section {
-  return {
-    id: sectionCounter++,
-    title,
-    items,
-  };
-}
+	const weeks = ref<Date[]>(getWeekWindow(getCurrentCalendarWeek()));
 
-function fetchNextSectionFromApi(): Section {
-  const id = sectionCounter++;
-  return {
-    id,
-    title: `Section ${id}`,
-    items: Array.from({ length: 8 }, (_, i) => `Item ${id}-${i + 1}`),
-  };
-}
+	const { getEventsForDay, loading, error } = useCalendarEvents(weeks);
 
-const dynamicSections = ref<Section[]>([
-  createSection("Section One", [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]),
-  createSection("Section Two", [10, 4, 3, 2, 1]),
-  createSection("Section Three", [6, 5, 4, 3, 2, 1]),
-]);
+	const segments = computed(() => {
+		return generateSegments();
+	});
 
-const sliderRef = ref<HTMLElement | null>(null);
+	const getDays = (week: Date) => {
+		const result: Date[] = [];
 
-onMounted(() => {
-  if (sliderRef.value) {
-    sliderRef.value.scrollLeft = sliderRef.value.clientWidth;
-  }
-});
+		for (let i = 0; i < 5; i++) {
+			const date = new Date(week);
 
-async function handleScroll(event: Event) {
-  const target = event.target as HTMLElement;
-  const sectionWidth = target.clientWidth;
+			date.setDate(week.getDate() + i);
 
-  const isAtEnd =
-    target.scrollLeft + target.clientWidth >= target.scrollWidth - 10;
-  const isAtBegin = target.scrollLeft <= 0;
+			result.push(date);
+		}
 
-  if (isAtEnd) {
-    dynamicSections.value.push(fetchNextSectionFromApi());
-  } else if (isAtBegin) {
-    dynamicSections.value.unshift(fetchNextSectionFromApi());
+		return result;
+	};
 
-    target.scrollLeft += sectionWidth;
-  }
-}
+	const sliderRef = ref<HTMLElement | null>(null);
 
-import { getISOWeek } from "date-fns";
-import { calendarConfig } from "~/config/calendar";
-import type { CalendarSegment } from "~/types/calendar";
+	let verticalScroll = 0;
 
-const {
-  generateSegments,
-  getSegmentHeight,
-  getEventPosition,
-  getTimePosition,
-  splitEventBySegments,
-  getCurrentCalendarWeek,
-  formatDay,
-  formatDayShort,
-  formatDate,
-  formatMonth,
-  dateKey,
-} = useCalendar(calendarConfig);
+	function handleVerticalScroll(event: Event) {
+		verticalScroll = (event.target as HTMLElement).scrollTop;
+	}
 
-const currentWeek = ref(getCurrentCalendarWeek());
+	const syncVerticalScroll = () => {
+		for (const el of sliderRef.value?.querySelectorAll<HTMLElement>(
+			"[data-week]",
+		) ?? []) {
+			if (el.scrollTop !== verticalScroll) {
+				el.scrollTop = verticalScroll;
+			}
+		}
+	};
 
-const { events, loading, error } = useCalendarEvents(currentWeek);
+	let supportsScrollEnd = false;
+	let scrollEndTimer: ReturnType<typeof setTimeout> | undefined;
+	let syncedThisScroll = false;
 
-const segments = computed(() => {
-  return generateSegments();
-});
+	onMounted(() => {
+		supportsScrollEnd = "onscrollend" in window;
 
-const days = computed(() => {
-  const result: Date[] = [];
+		if (sliderRef.value) {
+			sliderRef.value.scrollLeft = sliderRef.value.clientWidth;
+		}
+	});
 
-  for (let i = 0; i < 5; i++) {
-    const date = new Date(currentWeek.value);
+	onBeforeUnmount(() => {
+		clearTimeout(scrollEndTimer);
+	});
 
-    date.setDate(currentWeek.value.getDate() + i);
+	function handleScroll() {
+		if (!syncedThisScroll) {
+			syncVerticalScroll();
+			syncedThisScroll = true;
+		}
 
-    result.push(date);
-  }
+		if (!supportsScrollEnd) {
+			clearTimeout(scrollEndTimer);
+			scrollEndTimer = setTimeout(handleScrollEnd, 150);
+		}
+	}
 
-  return result;
-});
+	async function handleScrollEnd() {
+		syncedThisScroll = false;
 
-const calendarWeek = computed(() => {
-  return getISOWeek(currentWeek.value);
-});
+		const el = sliderRef.value;
 
-const getEventsForDay = (date: Date) => {
-  const key = dateKey(date);
+		if (!el) {
+			return;
+		}
 
-  return events.value.filter((event) => event.date === key);
-};
+		const index = Math.round(el.scrollLeft / el.clientWidth);
+		const center = weeks.value[index];
 
-const previousWeek = () => {
-  const date = new Date(currentWeek.value);
+		if (index === 1 || !center) {
+			return;
+		}
 
-  date.setDate(date.getDate() - 7);
+		weeks.value = getWeekWindow(center);
 
-  currentWeek.value = date;
-};
+		await nextTick();
+		el.scrollLeft = el.clientWidth;
+		syncVerticalScroll();
+	}
 
-const nextWeek = () => {
-  const date = new Date(currentWeek.value);
+	const scrollWeeks = (direction: 1 | -1) => {
+		const el = sliderRef.value;
 
-  date.setDate(date.getDate() + 7);
-
-  currentWeek.value = date;
-};
-
-const getResponsiveSegmentHeight = (segment: CalendarSegment) => {
-  return getSegmentHeight(segment);
-};
-
-const getResponsiveEventPosition = (
-  start: string,
-  end: string,
-  segments: CalendarSegment[],
-) => {
-  return getEventPosition(start, end, segments, getResponsiveSegmentHeight);
-};
-
-const getResponsiveTimePosition = (time: Date, segments: CalendarSegment[]) => {
-  return getTimePosition(time, segments, getResponsiveSegmentHeight);
-};
+		el?.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
+	};
 </script>
 
 <template>
-  <div class="flex flex-col w-screen h-screen overflow-hidden">
-    <header
-      class="h-[60px] w-full bg-red-600 text-white flex items-center px-4 z-10 shrink-0"
-    >
-      <span>Top Bar</span>
-    </header>
+	<div class="flex flex-col w-screen h-screen overflow-hidden">
+		<header
+			class="hidden md:flex h-[60px] w-full bg-neutral-800 border-b border-neutral-700 text-white items-center px-4 z-10 shrink-0"
+		>
+			<span>Top Bar</span>
 
-    <div class="flex flex-1 h-[calc(100vh-60px)] overflow-hidden">
-      <aside class="w-[60px] h-full z-10">
-        <div
-          class="h-[60px] bg-neutral-800 border-b border-r border-neutral-700 flex flex-col items-center justify-center"
-        >
-          <div class="text-white">KW {{ calendarWeek }}</div>
-          <div class="text-neutral-400">
-            {{ formatMonth(currentWeek) }}
-          </div>
-        </div>
+			<span v-if="loading" class="ml-auto text-sm">Lade Kalender...</span>
 
-        <div ref="timeColumn">
-          <div
-            v-for="segment in segments"
-            :key="`${segment.type}-${segment.start}-${segment.end}`"
-            class="border-b border-r border-neutral-700 text-neutral-400"
-            :class="{
-              'bg-neutral-500': segment.type === 'break',
-            }"
-            :style="{
-              height: `${getResponsiveSegmentHeight(segment)}px`,
-            }"
-          >
-            <template v-if="segment.type === 'lesson'">
-              <div
-                class="flex h-full flex-col items-center justify-between py-1 leading-none"
-              >
-                <span>
-                  {{ segment.start }}
-                </span>
+			<span v-else-if="error" class="ml-auto text-sm">
+				Kalender konnte nicht geladen werden.
+			</span>
 
-                <span>
-                  {{ segment.end }}
-                </span>
-              </div>
-            </template>
-          </div>
-        </div>
-      </aside>
+			<div
+				class="hidden md:flex items-center gap-1"
+				:class="{ 'ml-auto': !loading && !error, 'ml-4': loading || error }"
+			>
+				<button
+					type="button"
+					aria-label="Vorherige Woche"
+					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700"
+					@click="scrollWeeks(-1)"
+				>
+					<UIcon name="i-lucide-chevron-left" class="size-5" />
+				</button>
 
-      <main
-        ref="sliderRef"
-        class="flex-1 flex overflow-x-auto overflow-y-hidden h-full snap-x snap-mandatory scrollbar-none"
-        @scroll="handleScroll"
-      >
-        <section
-          v-for="section in dynamicSections"
-          :key="section.id"
-          class="w-full h-full snap-start text-center relative shrink-0"
-        >
-          <div
-            class="absolute top-0 left-0 right-0 z-30 h-[60px] bg-neutral-800 grid grid-cols-5 border-b border-neutral-700"
-          >
-            <div
-              v-for="day in days"
-              :key="dateKey(day)"
-              class="border-neutral-700 border-r flex flex-col justify-center"
-            >
-              <div class="text-white sm:hidden">
-                {{ formatDayShort(day) }}
-              </div>
+				<button
+					type="button"
+					aria-label="Nächste Woche"
+					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700"
+					@click="scrollWeeks(1)"
+				>
+					<UIcon name="i-lucide-chevron-right" class="size-5" />
+				</button>
+			</div>
+		</header>
 
-              <div class="text-neutral-400 sm:hidden">
-                {{ day.getDate() }}
-              </div>
+		<main
+			ref="sliderRef"
+			class="flex flex-1 min-h-0 overflow-x-auto overflow-y-hidden overscroll-x-none snap-x snap-mandatory scrollbar-none"
+			@scroll="handleScroll"
+			@scrollend="handleScrollEnd"
+		>
+			<section
+				v-for="week in weeks"
+				:key="dateKey(week)"
+				data-week
+				class="w-full h-full shrink-0 snap-start snap-always overflow-y-auto overflow-x-hidden overscroll-y-none scrollbar-none text-center"
+				@scroll="handleVerticalScroll"
+			>
+				<div
+					class="sticky top-0 z-30 h-[60px] bg-neutral-800 grid grid-cols-[60px_repeat(5,minmax(0,1fr))] border-b border-neutral-700"
+				>
+					<div
+						class="border-r border-neutral-700 flex flex-col items-center justify-center"
+					>
+						<div class="text-white">KW {{ getISOWeek(week) }}</div>
+						<div class="text-neutral-400">
+							{{ formatMonth(week) }}
+						</div>
+					</div>
 
-              <div class="hidden capitalize text-white sm:block">
-                {{ formatDay(day) }}
-              </div>
+					<div
+						v-for="day in getDays(week)"
+						:key="dateKey(day)"
+						class="border-neutral-700 border-r flex flex-col justify-center"
+					>
+						<div class="text-white sm:hidden">
+							{{ formatDayShort(day) }}
+						</div>
 
-              <div class="hidden text-sm text-neutral-400 sm:block">
-                {{ formatDate(day) }}
-              </div>
-            </div>
-          </div>
+						<div class="text-neutral-400 sm:hidden">
+							{{ day.getDate() }}
+						</div>
 
-          <div class="h-full overflow-y-auto scrollbar-none pt-[60px]">
-            <div class="overflow-auto">
-              <div class="min-w-0 sm:min-w-262.5">
-                <div ref="calendarBody" class="grid grid-cols-5">
-                  <CalendarDay
-                    v-for="day in days"
-                    :key="dateKey(day)"
-                    :date="day"
-                    :events="getEventsForDay(day)"
-                    :config="calendarConfig"
-                    :segments="segments"
-                    :get-segment-height="getResponsiveSegmentHeight"
-                    :get-event-position="getResponsiveEventPosition"
-                    :split-event-by-segments="splitEventBySegments"
-                    :get-time-position="getResponsiveTimePosition"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
+						<div class="hidden capitalize text-white sm:block">
+							{{ formatDay(day) }}
+						</div>
+
+						<div class="hidden text-sm text-neutral-400 sm:block">
+							{{ formatDate(day) }}
+						</div>
+					</div>
+				</div>
+
+				<div class="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
+					<div>
+						<div
+							v-for="segment in segments"
+							:key="`${segment.type}-${segment.start}-${segment.end}`"
+							class="border-b border-r border-neutral-700 text-neutral-400"
+							:class="{
+								'bg-neutral-500': segment.type === 'break',
+							}"
+							:style="{
+								height: `${getSegmentHeight(segment)}px`,
+							}"
+						>
+							<template v-if="segment.type === 'lesson'">
+								<div
+									class="flex h-full flex-col items-center justify-between py-1 leading-none"
+								>
+									<span>
+										{{ segment.start }}
+									</span>
+
+									<span>
+										{{ segment.end }}
+									</span>
+								</div>
+							</template>
+						</div>
+					</div>
+
+					<CalendarDay
+						v-for="day in getDays(week)"
+						:key="dateKey(day)"
+						:date="day"
+						:events="getEventsForDay(day)"
+						:segments="segments"
+					/>
+				</div>
+			</section>
+		</main>
+	</div>
 </template>
-
-<style>
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

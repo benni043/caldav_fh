@@ -26,7 +26,6 @@ export interface CalendarEvent {
 	date: string;
 
 	title: string;
-	subtitle?: string;
 	teacher?: string;
 	className?: string;
 	room?: string;
@@ -35,8 +34,8 @@ export interface CalendarEvent {
 	end: string;
 
 	color?: string;
-	tasklineId: string;
-	mooddleId: string;
+	tasklineId?: string;
+	moodleId?: string;
 }
 
 export interface CalendarSegment {

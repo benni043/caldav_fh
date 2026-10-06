@@ -169,15 +169,9 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.137
         version: 1.2.137
-      '@iconify-json/simple-icons':
-        specifier: ^1.2.97
-        version: 1.2.97
       '@nuxt/ui':
         specifier: ^4.11.2
         version: 4.11.2(17114ce524d580f4ed8a4d9fd0ea9e51)
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -200,9 +194,6 @@ importers:
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -759,9 +750,6 @@ packages:
 
   '@iconify-json/lucide@1.2.137':
     resolution: {integrity: sha512-uKz1+tFbv1RFX/mJQNksdnyKJijNfRGSNnxfiyKtr+dLNfA3ERph+IgpXClKGOlV/5GsZwLv2jgJXQ/bjF/JAg==}
-
-  '@iconify-json/simple-icons@1.2.97':
-    resolution: {integrity: sha512-Z6PmM6jvWVU7rmLzqbxCLJA7SeqCnK6lMHXtjyzHPLZebwuoojBEcHHycppahDzEeN9xujRkrV5J8QpOhMyNrg==}
 
   '@iconify/collections@1.0.742':
     resolution: {integrity: sha512-4YrzjMOcF2Wmiakc1bS0AhvNb+zedU0fGNuGxjgNAfgw1WszIOwuq6LdqqFe3kvMKRB07d1LDWe1BNhhO6uXPA==}
@@ -4861,10 +4849,6 @@ snapshots:
       - vue
 
   '@iconify-json/lucide@1.2.137':
-    dependencies:
-      '@iconify/types': 2.0.0
-
-  '@iconify-json/simple-icons@1.2.97':
     dependencies:
       '@iconify/types': 2.0.0
 

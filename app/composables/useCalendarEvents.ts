@@ -1,5 +1,5 @@
-import { addDays, startOfWeek } from "date-fns";
-import { moodleIds, taskLineIds } from "~/config/calendar.ts";
+import { addDays, format, startOfWeek } from "date-fns";
+import { moodleIds, taskLineIds } from "~/config/calendar";
 import type { BackendCalendarEvent, CalendarEvent } from "~/types/calendar";
 
 const timeZone = "Europe/Vienna";
@@ -94,53 +94,73 @@ const transformEvent = (event: BackendCalendarEvent): CalendarEvent => {
 		end: getLocalTime(event.end),
 
 		color: getEventColor(parsed.title),
-		tasklineId: getTasklineId(parsed.title)!.id,
-		mooddleId: getMoodleId(parsed.title)!.id,
+		tasklineId: getTasklineId(parsed.title)?.id,
+		moodleId: getMoodleId(parsed.title)?.id,
 	};
 };
 
-export const useCalendarEvents = (currentWeek: Ref<Date>) => {
-	const url = "url";
+export const useCalendarEvents = (weeks: Ref<Date[]>) => {
+	const eventsByWeek = ref<Record<string, CalendarEvent[]>>({});
+	const requested = new Set<string>();
+	const pendingCount = ref(0);
+	const error = ref<unknown>(null);
 
-	const username = "username";
-	const password = "password";
+	const weekKey = (date: Date) =>
+		format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
-	const monday = computed(() =>
-		startOfWeek(currentWeek.value, {
-			weekStartsOn: 1,
-		}),
-	);
+	const loadWeek = async (date: Date) => {
+		const key = weekKey(date);
 
-	const nextMonday = computed(() => addDays(monday.value, 7));
+		if (requested.has(key)) {
+			return;
+		}
 
-	const { data, pending, error, refresh } = useAsyncData(
-		"calendar-events",
-		() =>
-			$fetch<BackendCalendarEvent[]>("/api/calendar", {
+		requested.add(key);
+		pendingCount.value++;
+
+		const monday = startOfWeek(date, { weekStartsOn: 1 });
+		const nextMonday = addDays(monday, 7);
+
+		try {
+			const data = await $fetch<BackendCalendarEvent[]>("/api/calendar", {
 				query: {
-					url,
-					from: monday.value.toISOString(),
-					to: nextMonday.value.toISOString(),
+					from: monday.toISOString(),
+					to: nextMonday.toISOString(),
 				},
+			});
 
-				headers: {
-					Authorization: `Basic ${btoa(`${username}:${password}`)}`,
-				},
-			}),
-		{
-			watch: [monday],
-			default: () => [],
-		},
-	);
+			eventsByWeek.value[key] = data.map(transformEvent);
+		} catch (err: unknown) {
+			requested.delete(key);
+			error.value = err;
+		} finally {
+			pendingCount.value--;
+		}
+	};
 
-	const events = computed<CalendarEvent[]>(() =>
-		data.value.map(transformEvent),
-	);
+	if (import.meta.client) {
+		watch(
+			weeks,
+			(value) => {
+				for (const week of value) {
+					loadWeek(week);
+				}
+			},
+			{ immediate: true, deep: true },
+		);
+	}
+
+	const getEventsForDay = (date: Date) => {
+		const key = format(date, "yyyy-MM-dd");
+
+		return (eventsByWeek.value[weekKey(date)] ?? []).filter(
+			(event) => event.date === key,
+		);
+	};
 
 	return {
-		events,
-		loading: pending,
+		getEventsForDay,
+		loading: computed(() => pendingCount.value > 0),
 		error,
-		refresh,
 	};
 };
