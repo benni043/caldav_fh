@@ -22,7 +22,7 @@
 
 	const weeks = ref<Date[]>(getWeekWindow(getCurrentCalendarWeek()));
 
-	const { getEventsForDay, loading, error } = useCalendarEvents(weeks);
+	const { getEventsForDay, refresh, loading, error } = useCalendarEvents(weeks);
 
 	const segments = computed(() => {
 		return generateSegments();
@@ -43,6 +43,13 @@
 	};
 
 	const sliderRef = ref<HTMLElement | null>(null);
+
+	const {
+		pullDistance,
+		progress,
+		status: pullStatus,
+		trigger: triggerRefresh,
+	} = usePullToRefresh(sliderRef, refresh);
 
 	let verticalScroll = 0;
 
@@ -137,6 +144,20 @@
 			>
 				<button
 					type="button"
+					aria-label="Aktualisieren"
+					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700 disabled:opacity-50"
+					:disabled="pullStatus === 'refreshing'"
+					@click="triggerRefresh"
+				>
+					<UIcon
+						name="i-lucide-refresh-cw"
+						class="size-5"
+						:class="{ 'animate-spin': pullStatus === 'refreshing' }"
+					/>
+				</button>
+
+				<button
+					type="button"
 					aria-label="Vorherige Woche"
 					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700"
 					@click="scrollWeeks(-1)"
@@ -155,92 +176,131 @@
 			</div>
 		</header>
 
-		<main
-			ref="sliderRef"
-			class="flex flex-1 min-h-0 overflow-x-auto overflow-y-hidden overscroll-x-none snap-x snap-mandatory scrollbar-none"
-			@scroll="handleScroll"
-			@scrollend="handleScrollEnd"
-		>
-			<section
-				v-for="week in weeks"
-				:key="dateKey(week)"
-				data-week
-				class="w-full h-full shrink-0 snap-start snap-always overflow-y-auto overflow-x-hidden overscroll-y-none scrollbar-none text-center"
-				@scroll="handleVerticalScroll"
+		<div class="relative flex flex-1 min-h-0">
+			<main
+				ref="sliderRef"
+				class="flex flex-1 min-h-0 overflow-x-auto overflow-y-hidden overscroll-x-none snap-x snap-mandatory scrollbar-none"
+				@scroll="handleScroll"
+				@scrollend="handleScrollEnd"
 			>
-				<div
-					class="sticky top-0 z-30 h-[60px] bg-neutral-800 grid grid-cols-[60px_repeat(5,minmax(0,1fr))] border-b border-neutral-700"
+				<section
+					v-for="week in weeks"
+					:key="dateKey(week)"
+					data-week
+					class="w-full h-full shrink-0 snap-start snap-always overflow-y-auto overflow-x-hidden overscroll-y-none scrollbar-none text-center"
+					@scroll="handleVerticalScroll"
 				>
 					<div
-						class="border-r border-neutral-700 flex flex-col items-center justify-center"
+						class="sticky top-0 z-30 h-[60px] bg-neutral-800 grid grid-cols-[60px_repeat(5,minmax(0,1fr))] border-b border-neutral-700"
 					>
-						<div class="text-white">KW {{ getISOWeek(week) }}</div>
-						<div class="text-neutral-400">
-							{{ formatMonth(week) }}
-						</div>
-					</div>
-
-					<div
-						v-for="day in getDays(week)"
-						:key="dateKey(day)"
-						class="border-neutral-700 border-r flex flex-col justify-center"
-					>
-						<div class="text-white sm:hidden">
-							{{ formatDayShort(day) }}
-						</div>
-
-						<div class="text-neutral-400 sm:hidden">
-							{{ day.getDate() }}
-						</div>
-
-						<div class="hidden capitalize text-white sm:block">
-							{{ formatDay(day) }}
-						</div>
-
-						<div class="hidden text-sm text-neutral-400 sm:block">
-							{{ formatDate(day) }}
-						</div>
-					</div>
-				</div>
-
-				<div class="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
-					<div>
 						<div
-							v-for="segment in segments"
-							:key="`${segment.type}-${segment.start}-${segment.end}`"
-							class="border-b border-r border-neutral-700 text-neutral-400"
-							:class="{
+							class="border-r border-neutral-700 flex flex-col items-center justify-center"
+						>
+							<div class="text-white">KW {{ getISOWeek(week) }}</div>
+							<div class="text-neutral-400">
+								{{ formatMonth(week) }}
+							</div>
+						</div>
+
+						<div
+							v-for="day in getDays(week)"
+							:key="dateKey(day)"
+							class="border-neutral-700 border-r flex flex-col justify-center"
+						>
+							<div class="text-white sm:hidden">
+								{{ formatDayShort(day) }}
+							</div>
+
+							<div class="text-neutral-400 sm:hidden">
+								{{ day.getDate() }}
+							</div>
+
+							<div class="hidden capitalize text-white sm:block">
+								{{ formatDay(day) }}
+							</div>
+
+							<div class="hidden text-sm text-neutral-400 sm:block">
+								{{ formatDate(day) }}
+							</div>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
+						<div>
+							<div
+								v-for="segment in segments"
+								:key="`${segment.type}-${segment.start}-${segment.end}`"
+								class="border-b border-r border-neutral-700 text-neutral-400"
+								:class="{
 								'bg-neutral-500': segment.type === 'break',
 							}"
-							:style="{
+								:style="{
 								height: `${getSegmentHeight(segment)}px`,
 							}"
-						>
-							<template v-if="segment.type === 'lesson'">
-								<div
-									class="flex h-full flex-col items-center justify-between py-1 leading-none"
-								>
-									<span>
-										{{ segment.start }}
-									</span>
+							>
+								<template v-if="segment.type === 'lesson'">
+									<div
+										class="flex h-full flex-col items-center justify-between py-1 leading-none"
+									>
+										<span>
+											{{ segment.start }}
+										</span>
 
-									<span>
-										{{ segment.end }}
-									</span>
-								</div>
-							</template>
+										<span>
+											{{ segment.end }}
+										</span>
+									</div>
+								</template>
+							</div>
 						</div>
-					</div>
 
-					<CalendarDay
-						v-for="day in getDays(week)"
-						:key="dateKey(day)"
-						:date="day"
-						:events="getEventsForDay(day)"
-						:segments="segments"
+						<CalendarDay
+							v-for="day in getDays(week)"
+							:key="dateKey(day)"
+							:date="day"
+							:events="getEventsForDay(day)"
+							:segments="segments"
+						/>
+					</div>
+				</section>
+			</main>
+
+			<div
+				class="pointer-events-none absolute inset-x-0 top-[60px] z-40 flex justify-center"
+				:class="{ 'transition-transform duration-200': pullStatus !== 'pulling' }"
+				:style="{ transform: `translateY(${pullDistance - 48}px)` }"
+				role="status"
+				aria-live="polite"
+			>
+				<div
+					v-if="pullStatus !== 'idle'"
+					class="flex h-10 items-center gap-2 rounded-full border border-neutral-700 bg-neutral-800 px-2.5 text-sm text-white shadow-lg"
+				>
+					<UIcon
+						v-if="pullStatus === 'pulling'"
+						name="i-lucide-arrow-down"
+						class="size-5 transition-transform"
+						:class="progress >= 1 ? 'text-green-400' : 'text-neutral-400'"
+						:style="{ transform: `rotate(${progress >= 1 ? 180 : 0}deg)` }"
 					/>
+
+					<UIcon
+						v-else-if="pullStatus === 'refreshing'"
+						name="i-lucide-refresh-cw"
+						class="size-5 animate-spin"
+					/>
+
+					<template v-else-if="pullStatus === 'done'">
+						<UIcon name="i-lucide-check" class="size-5 text-green-400" />
+						<span class="pr-1">Aktualisiert</span>
+					</template>
+
+					<template v-else>
+						<UIcon name="i-lucide-circle-alert" class="size-5 text-red-400" />
+						<span class="pr-1">Aktualisieren fehlgeschlagen</span>
+					</template>
 				</div>
-			</section>
-		</main>
+			</div>
+		</div>
 	</div>
 </template>

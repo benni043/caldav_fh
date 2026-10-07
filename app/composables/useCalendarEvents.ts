@@ -108,6 +108,21 @@ export const useCalendarEvents = (weeks: Ref<Date[]>) => {
 	const weekKey = (date: Date) =>
 		format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
+	const fetchWeek = async (date: Date, refresh = false) => {
+		const monday = startOfWeek(date, { weekStartsOn: 1 });
+		const nextMonday = addDays(monday, 7);
+
+		const data = await $fetch<BackendCalendarEvent[]>("/api/calendar", {
+			query: {
+				from: monday.toISOString(),
+				to: nextMonday.toISOString(),
+				...(refresh && { refresh: 1 }),
+			},
+		});
+
+		eventsByWeek.value[weekKey(date)] = data.map(transformEvent);
+	};
+
 	const loadWeek = async (date: Date) => {
 		const key = weekKey(date);
 
@@ -118,24 +133,34 @@ export const useCalendarEvents = (weeks: Ref<Date[]>) => {
 		requested.add(key);
 		pendingCount.value++;
 
-		const monday = startOfWeek(date, { weekStartsOn: 1 });
-		const nextMonday = addDays(monday, 7);
-
 		try {
-			const data = await $fetch<BackendCalendarEvent[]>("/api/calendar", {
-				query: {
-					from: monday.toISOString(),
-					to: nextMonday.toISOString(),
-				},
-			});
-
-			eventsByWeek.value[key] = data.map(transformEvent);
+			await fetchWeek(date);
 		} catch (err: unknown) {
 			requested.delete(key);
 			error.value = err;
 		} finally {
 			pendingCount.value--;
 		}
+	};
+
+	// Reloads the visible weeks bypassing the server cache. Other weeks are
+	// forgotten so they get loaded fresh when scrolled to
+	const refresh = async () => {
+		const visible = new Set(weeks.value.map(weekKey));
+
+		for (const key of Object.keys(eventsByWeek.value)) {
+			if (!visible.has(key)) {
+				delete eventsByWeek.value[key];
+			}
+		}
+
+		requested.clear();
+		for (const key of visible) {
+			requested.add(key);
+		}
+
+		await Promise.all(weeks.value.map((week) => fetchWeek(week, true)));
+		error.value = null;
 	};
 
 	const loadWeeks = (value: Date[]) => {
@@ -160,6 +185,7 @@ export const useCalendarEvents = (weeks: Ref<Date[]>) => {
 
 	return {
 		getEventsForDay,
+		refresh,
 		loading: computed(() => pendingCount.value > 0),
 		error,
 	};
