@@ -24,6 +24,10 @@
 
 	const { getEventsForDay, refresh, loading, error } = useCalendarEvents(weeks);
 
+	const now = useNow();
+
+	const isToday = (day: Date) => dateKey(day) === dateKey(now.value);
+
 	const segments = computed(() => {
 		return generateSegments();
 	});
@@ -145,39 +149,45 @@
 
 		el?.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
 	};
+
+	// Puts the current week next to the visible one and slides to it,
+	// so it animates like a normal page change; handleScrollEnd recenters
+	const scrollToToday = async () => {
+		const el = sliderRef.value;
+		const [, center] = weeks.value;
+		const today = getCurrentCalendarWeek();
+
+		if (!el || !center || dateKey(today) === dateKey(center)) {
+			return;
+		}
+
+		const direction = today < center ? -1 : 1;
+
+		weeks.value =
+			direction === -1
+				? [today, center, addWeeks(center, 1)]
+				: [addWeeks(center, -1), center, today];
+
+		await nextTick();
+		scrollWeeks(direction);
+	};
 </script>
 
 <template>
-	<div class="flex flex-col w-screen h-screen overflow-hidden">
+	<div class="flex flex-col w-screen h-dvh overflow-hidden">
 		<header
-			class="hidden md:flex h-[60px] w-full bg-neutral-800 border-b border-neutral-700 text-white items-center px-4 z-10 shrink-0"
+			class="flex h-[60px] w-full bg-neutral-800 border-b border-neutral-700 text-white items-center pl-2 pr-4 z-10 shrink-0"
 		>
-			<span>Top Bar</span>
-
-			<span v-if="loading" class="ml-auto text-sm">Lade Kalender...</span>
-
-			<span v-else-if="error" class="ml-auto text-sm">
-				Kalender konnte nicht geladen werden.
-			</span>
-
-			<div
-				class="hidden md:flex items-center gap-1"
-				:class="{ 'ml-auto': !loading && !error, 'ml-4': loading || error }"
+			<button
+				type="button"
+				aria-label="Zur aktuellen Woche"
+				class="font-semibold transition hover:cursor-pointer hover:text-neutral-300"
+				@click="scrollToToday"
 			>
-				<button
-					type="button"
-					aria-label="Aktualisieren"
-					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700 disabled:opacity-50"
-					:disabled="pullStatus === 'refreshing'"
-					@click="triggerRefresh"
-				>
-					<UIcon
-						name="i-lucide-refresh-cw"
-						class="size-5"
-						:class="{ 'animate-spin': pullStatus === 'refreshing' }"
-					/>
-				</button>
+				Stundenplan
+			</button>
 
+			<div class="hidden md:flex items-center gap-1 ml-6">
 				<button
 					type="button"
 					aria-label="Vorherige Woche"
@@ -196,6 +206,27 @@
 					<UIcon name="i-lucide-chevron-right" class="size-5" />
 				</button>
 			</div>
+
+			<span v-if="loading" class="ml-auto text-sm">Lade Kalender...</span>
+
+			<span v-else-if="error" class="ml-auto text-sm">
+				Kalender konnte nicht geladen werden.
+			</span>
+
+			<button
+				type="button"
+				aria-label="Aktualisieren"
+				class="hidden md:flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700 disabled:opacity-50"
+				:class="{ 'ml-auto': !loading && !error, 'ml-4': loading || error }"
+				:disabled="pullStatus === 'refreshing'"
+				@click="triggerRefresh"
+			>
+				<UIcon
+					name="i-lucide-refresh-cw"
+					class="size-5"
+					:class="{ 'animate-spin': pullStatus === 'refreshing' }"
+				/>
+			</button>
 		</header>
 
 		<div class="relative flex flex-1 min-h-0">
@@ -228,12 +259,16 @@
 							v-for="day in getDays(week)"
 							:key="dateKey(day)"
 							class="border-neutral-700 border-r flex flex-col justify-center"
+							:class="{ 'font-bold': isToday(day) }"
 						>
 							<div class="text-white sm:hidden">
 								{{ formatDayShort(day) }}
 							</div>
 
-							<div class="text-neutral-400 sm:hidden">
+							<div
+								class="sm:hidden"
+								:class="isToday(day) ? 'text-white' : 'text-neutral-400'"
+							>
 								{{ day.getDate() }}
 							</div>
 
@@ -241,7 +276,10 @@
 								{{ formatDay(day) }}
 							</div>
 
-							<div class="hidden text-sm text-neutral-400 sm:block">
+							<div
+								class="hidden text-sm sm:block"
+								:class="isToday(day) ? 'text-white' : 'text-neutral-400'"
+							>
 								{{ formatDate(day) }}
 							</div>
 						</div>
