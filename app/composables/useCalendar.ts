@@ -146,7 +146,20 @@ export function useCalendar(config: CalendarConfig) {
 
 	const pixelsPerMinute = 1.8;
 
+	// Set on narrow screens to the day column width, so a full lesson is square
+	const mobileLessonHeight = useState<number | null>(
+		"mobileLessonHeight",
+		() => null,
+	);
+
 	const getSegmentHeight = (segment: CalendarSegment) => {
+		if (mobileLessonHeight.value && segment.type === "lesson") {
+			return Math.max(
+				(segment.duration / config.lessonDuration) * mobileLessonHeight.value,
+				40,
+			);
+		}
+
 		return Math.max(
 			segment.duration * pixelsPerMinute,
 			segment.type === "lesson" ? 70 : 18,

@@ -71,15 +71,37 @@
 	let scrollEndTimer: ReturnType<typeof setTimeout> | undefined;
 	let syncedThisScroll = false;
 
+	// Matches the grid: 60px time column + 5 day columns, below Tailwind's sm
+	const timeColumnWidth = 60;
+	const mobileBreakpoint = 640;
+
+	const mobileLessonHeight = useState<number | null>("mobileLessonHeight");
+
+	const updateLessonHeight = () => {
+		const width = sliderRef.value?.clientWidth ?? 0;
+
+		mobileLessonHeight.value =
+			width > 0 && width < mobileBreakpoint
+				? (width - timeColumnWidth) / 5
+				: null;
+	};
+
+	let resizeObserver: ResizeObserver | undefined;
+
 	onMounted(() => {
 		supportsScrollEnd = "onscrollend" in window;
 
 		if (sliderRef.value) {
 			sliderRef.value.scrollLeft = sliderRef.value.clientWidth;
+
+			updateLessonHeight();
+			resizeObserver = new ResizeObserver(updateLessonHeight);
+			resizeObserver.observe(sliderRef.value);
 		}
 	});
 
 	onBeforeUnmount(() => {
+		resizeObserver?.disconnect();
 		clearTimeout(scrollEndTimer);
 	});
 
