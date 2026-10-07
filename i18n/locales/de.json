@@ -1,0 +1,21 @@
+{
+	"title": "Stundenplan",
+	"goToToday": "Zur aktuellen Woche",
+	"previousWeek": "Vorherige Woche",
+	"nextWeek": "Nächste Woche",
+	"calendarWeek": "KW",
+	"loading": "Lade Kalender...",
+	"loadError": "Kalender konnte nicht geladen werden.",
+	"refresh": "Aktualisieren",
+	"refreshed": "Aktualisiert",
+	"refreshFailed": "Aktualisieren fehlgeschlagen",
+	"language": "Sprache",
+	"settings": {
+		"title": "Einstellungen",
+		"colorfulToday": "Heutigen Tag bunt anzeigen"
+	},
+	"event": {
+		"room": "Raum",
+		"teacher": "Lehrer"
+	}
+}

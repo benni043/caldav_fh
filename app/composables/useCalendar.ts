@@ -5,6 +5,10 @@ import type {
 } from "~/types/calendar";
 
 export function useCalendar(config: CalendarConfig) {
+	// Weekday and month names follow the language in the URL (/de or /en)
+	const { localeProperties } = useI18n();
+	const language = computed(() => localeProperties.value.language ?? "de-AT");
+
 	const timeToMinutes = (time: string): number => {
 		const [hours, minutes] = time.split(":").map(Number);
 
@@ -275,21 +279,23 @@ export function useCalendar(config: CalendarConfig) {
 	};
 
 	const formatDay = (date: Date) => {
-		return date.toLocaleDateString("de-AT", {
+		return date.toLocaleDateString(language.value, {
 			weekday: "long",
 		});
 	};
 
 	const formatDayShort = (date: Date) => {
-		const value = date.toLocaleDateString("de-AT", {
+		const value = date.toLocaleDateString(language.value, {
 			weekday: "short",
 		});
 
-		return value.endsWith(".") ? value : `${value}.`;
+		return language.value.startsWith("de") && !value.endsWith(".")
+			? `${value}.`
+			: value;
 	};
 
 	const formatDate = (date: Date) => {
-		return date.toLocaleDateString("de-AT", {
+		return date.toLocaleDateString(language.value, {
 			day: "2-digit",
 			month: "2-digit",
 			year: "numeric",
@@ -297,7 +303,7 @@ export function useCalendar(config: CalendarConfig) {
 	};
 
 	const formatMonth = (date: Date) => {
-		return date.toLocaleDateString("de-AT", {
+		return date.toLocaleDateString(language.value, {
 			month: "short",
 		});
 	};

@@ -95,12 +95,12 @@
 		<UModal v-model:open="modalOpen" :title="selectedEvent?.title">
 			<template #body>
 				<div v-if="selectedEvent?.room">
-					<strong>Raum:</strong>
+					<strong>{{ $t("event.room") }}:</strong>
 					{{ selectedEvent.room }}
 				</div>
 
 				<div v-if="selectedEvent?.teacher">
-					<strong>Lehrer:</strong>
+					<strong>{{ $t("event.teacher") }}:</strong>
 					{{ selectedEvent.teacher }}
 				</div>
 

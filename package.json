@@ -17,6 +17,7 @@
 	"dependencies": {
 		"@iconify-json/lucide": "^1.2.137",
 		"@nuxt/ui": "^4.11.2",
+		"@nuxtjs/i18n": "^10.6.0",
 		"date-fns": "^4.4.0",
 		"ical.js": "^2.2.1",
 		"nuxt": "^4.5.2",

@@ -28,6 +28,8 @@
 
 	const isToday = (day: Date) => dateKey(day) === dateKey(now.value);
 
+	const settings = useSettings();
+
 	const segments = computed(() => {
 		return generateSegments();
 	});
@@ -180,17 +182,17 @@
 		>
 			<button
 				type="button"
-				aria-label="Zur aktuellen Woche"
+				:aria-label="$t('goToToday')"
 				class="font-semibold transition hover:cursor-pointer hover:text-neutral-300"
 				@click="scrollToToday"
 			>
-				Stundenplan
+				{{ $t("title") }}
 			</button>
 
 			<div class="hidden md:flex items-center gap-1 ml-6">
 				<button
 					type="button"
-					aria-label="Vorherige Woche"
+					:aria-label="$t('previousWeek')"
 					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700"
 					@click="scrollWeeks(-1)"
 				>
@@ -199,7 +201,7 @@
 
 				<button
 					type="button"
-					aria-label="Nächste Woche"
+					:aria-label="$t('nextWeek')"
 					class="flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700"
 					@click="scrollWeeks(1)"
 				>
@@ -207,26 +209,32 @@
 				</button>
 			</div>
 
-			<span v-if="loading" class="ml-auto text-sm">Lade Kalender...</span>
+			<span v-if="loading" class="ml-auto text-sm">{{ $t("loading") }}</span>
 
 			<span v-else-if="error" class="ml-auto text-sm">
-				Kalender konnte nicht geladen werden.
+				{{ $t("loadError") }}
 			</span>
 
-			<button
-				type="button"
-				aria-label="Aktualisieren"
-				class="hidden md:flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700 disabled:opacity-50"
+			<div
+				class="flex items-center gap-1"
 				:class="{ 'ml-auto': !loading && !error, 'ml-4': loading || error }"
-				:disabled="pullStatus === 'refreshing'"
-				@click="triggerRefresh"
 			>
-				<UIcon
-					name="i-lucide-refresh-cw"
-					class="size-5"
-					:class="{ 'animate-spin': pullStatus === 'refreshing' }"
-				/>
-			</button>
+				<button
+					type="button"
+					:aria-label="$t('refresh')"
+					class="hidden md:flex rounded-md p-1.5 transition hover:cursor-pointer hover:bg-neutral-700 disabled:opacity-50"
+					:disabled="pullStatus === 'refreshing'"
+					@click="triggerRefresh"
+				>
+					<UIcon
+						name="i-lucide-refresh-cw"
+						class="size-5"
+						:class="{ 'animate-spin': pullStatus === 'refreshing' }"
+					/>
+				</button>
+
+				<SettingsModal />
+			</div>
 		</header>
 
 		<div class="relative flex flex-1 min-h-0">
@@ -249,7 +257,9 @@
 						<div
 							class="border-r border-neutral-700 flex flex-col items-center justify-center"
 						>
-							<div class="text-white">KW {{ getISOWeek(week) }}</div>
+							<div class="text-white">
+								{{ $t("calendarWeek") }} {{ getISOWeek(week) }}
+							</div>
 							<div class="text-neutral-400">
 								{{ formatMonth(week) }}
 							</div>
@@ -259,28 +269,39 @@
 							v-for="day in getDays(week)"
 							:key="dateKey(day)"
 							class="border-neutral-700 border-r flex flex-col justify-center"
-							:class="{ 'font-bold': isToday(day) }"
 						>
-							<div class="text-white sm:hidden">
-								{{ formatDayShort(day) }}
-							</div>
-
 							<div
-								class="sm:hidden"
-								:class="isToday(day) ? 'text-white' : 'text-neutral-400'"
+								:class="
+									isToday(day) && [
+										'font-bold',
+										settings.colorfulToday ? 'animate-rainbow' : 'text-white',
+									]
+								"
 							>
-								{{ day.getDate() }}
-							</div>
+								<div class="sm:hidden" :class="{ 'text-white': !isToday(day) }">
+									{{ formatDayShort(day) }}
+								</div>
 
-							<div class="hidden capitalize text-white sm:block">
-								{{ formatDay(day) }}
-							</div>
+								<div
+									class="sm:hidden"
+									:class="{ 'text-neutral-400': !isToday(day) }"
+								>
+									{{ day.getDate() }}
+								</div>
 
-							<div
-								class="hidden text-sm sm:block"
-								:class="isToday(day) ? 'text-white' : 'text-neutral-400'"
-							>
-								{{ formatDate(day) }}
+								<div
+									class="hidden capitalize sm:block"
+									:class="{ 'text-white': !isToday(day) }"
+								>
+									{{ formatDay(day) }}
+								</div>
+
+								<div
+									class="hidden text-sm sm:block"
+									:class="{ 'text-neutral-400': !isToday(day) }"
+								>
+									{{ formatDate(day) }}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -352,12 +373,12 @@
 
 					<template v-else-if="pullStatus === 'done'">
 						<UIcon name="i-lucide-check" class="size-5 text-green-400" />
-						<span class="pr-1">Aktualisiert</span>
+						<span class="pr-1">{{ $t("refreshed") }}</span>
 					</template>
 
 					<template v-else>
 						<UIcon name="i-lucide-circle-alert" class="size-5 text-red-400" />
-						<span class="pr-1">Aktualisieren fehlgeschlagen</span>
+						<span class="pr-1">{{ $t("refreshFailed") }}</span>
 					</template>
 				</div>
 			</div>

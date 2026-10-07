@@ -1,0 +1,21 @@
+{
+	"title": "Schedule",
+	"goToToday": "Go to current week",
+	"previousWeek": "Previous week",
+	"nextWeek": "Next week",
+	"calendarWeek": "CW",
+	"loading": "Loading calendar...",
+	"loadError": "Calendar could not be loaded.",
+	"refresh": "Refresh",
+	"refreshed": "Refreshed",
+	"refreshFailed": "Refresh failed",
+	"language": "Language",
+	"settings": {
+		"title": "Settings",
+		"colorfulToday": "Show today in color"
+	},
+	"event": {
+		"room": "Room",
+		"teacher": "Teacher"
+	}
+}
