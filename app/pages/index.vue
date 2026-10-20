@@ -219,6 +219,16 @@
 				class="flex items-center gap-1"
 				:class="{ 'ml-auto': !loading && !error, 'ml-4': loading || error }"
 			>
+				<NuxtLink
+					:to="'https://lia.coffee/#fh-menu'"
+					external
+					target="_blank"
+					class="flex gap-0.5 items-center ml-6"
+				>
+					<UIcon name="lucide:utensils" class="size-5" />
+					Mensa
+				</NuxtLink>
+
 				<button
 					type="button"
 					:aria-label="$t('refresh')"
