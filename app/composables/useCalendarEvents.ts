@@ -105,6 +105,8 @@ export const useCalendarEvents = (weeks: Ref<Date[]>) => {
 	const pendingCount = ref(0);
 	const error = ref<unknown>(null);
 
+	const { loadTests } = useSubjectTests();
+
 	const weekKey = (date: Date) =>
 		format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
@@ -112,13 +114,16 @@ export const useCalendarEvents = (weeks: Ref<Date[]>) => {
 		const monday = startOfWeek(date, { weekStartsOn: 1 });
 		const nextMonday = addDays(monday, 7);
 
-		const data = await $fetch<BackendCalendarEvent[]>("/api/calendar", {
-			query: {
-				from: monday.toISOString(),
-				to: nextMonday.toISOString(),
-				...(refresh && { refresh: 1 }),
-			},
-		});
+		const [data] = await Promise.all([
+			$fetch<BackendCalendarEvent[]>("/api/calendar", {
+				query: {
+					from: monday.toISOString(),
+					to: nextMonday.toISOString(),
+					...(refresh && { refresh: 1 }),
+				},
+			}),
+			loadTests(format(monday, "yyyy-MM-dd"), format(nextMonday, "yyyy-MM-dd")),
+		]);
 
 		eventsByWeek.value[weekKey(date)] = data.map(transformEvent);
 	};

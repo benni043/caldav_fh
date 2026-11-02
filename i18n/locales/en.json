@@ -16,6 +16,8 @@
 	},
 	"event": {
 		"room": "Room",
-		"teacher": "Teacher"
+		"teacher": "Teacher",
+		"hasTest": "Test on this day",
+		"testSaveFailed": "Test could not be saved"
 	}
 }

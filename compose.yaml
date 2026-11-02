@@ -12,5 +12,38 @@ services:
       URL: ${URL}
       CIS_USER: ${CIS_USER}
       CIS_PASSWORD: ${CIS_PASSWORD}
+      DATABASE_URL: postgres://caldav:${POSTGRES_PASSWORD}@db:5432/caldav
+
+    depends_on:
+      db:
+        condition: service_healthy
 
     restart: always
+
+  db:
+    build: ./db
+
+    # Only reachable from this machine, for running `pnpm dev` against it
+    ports:
+      - "127.0.0.1:5433:5432"
+
+    environment:
+      POSTGRES_USER: caldav
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: caldav
+
+    volumes:
+      # Postgres 18+ keeps its data in a versioned folder below this path
+      - db-data:/var/lib/postgresql
+
+    healthcheck:
+      # Over TCP, as the temporary server during first-time setup only uses the socket
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "caldav", "-d", "caldav"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    restart: always
+
+volumes:
+  db-data:

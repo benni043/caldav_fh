@@ -16,6 +16,10 @@ const {
   timeToMinutes,
 } = useCalendar(calendarConfig);
 
+const { hasTest, setTest } = useSubjectTests();
+const toast = useToast();
+const { t } = useI18n();
+
 const selectedEvent = ref<CalendarEvent | null>(null);
 
 const modalOpen = computed({
@@ -53,15 +57,26 @@ const displayEvents = computed(() =>
   props.events.flatMap((event) => splitEventBySegments(event, props.segments)),
 );
 
-const isHighlighted = (event: CalendarEvent) => true;
+const toggleTest = async (event: CalendarEvent, value: boolean) => {
+  try {
+    await setTest(event.title, event.date, value);
+  } catch {
+    toast.add({ title: t("event.testSaveFailed"), color: "error" });
+  }
+};
 
 const highlightGroups = computed(() => {
-  const sorted = displayEvents.value
-    .filter(isHighlighted)
-    .toSorted((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+  const sorted = displayEvents.value.toSorted(
+    (a, b) => timeToMinutes(a.start) - timeToMinutes(b.start),
+  );
 
-  const groups: { key: string; title: string; start: string; end: string }[] =
-    [];
+  const groups: {
+    key: string;
+    title: string;
+    date: string;
+    start: string;
+    end: string;
+  }[] = [];
 
   for (const event of sorted) {
     const last = groups.at(-1);
@@ -74,13 +89,15 @@ const highlightGroups = computed(() => {
       groups.push({
         key: `${event.title}-${event.start}`,
         title: event.title,
+        date: event.date,
         start: event.start,
         end: event.end,
       });
     }
   }
 
-  return groups;
+  // Filtered after grouping, so another subject in between keeps its own box
+  return groups.filter((group) => hasTest(group.title, group.date));
 });
 </script>
 
@@ -138,6 +155,14 @@ const highlightGroups = computed(() => {
           <strong>{{ $t("event.teacher") }}:</strong>
           {{ selectedEvent.teacher }}
         </div>
+
+        <UCheckbox
+          v-if="selectedEvent"
+          class="my-3"
+          :label="$t('event.hasTest')"
+          :model-value="hasTest(selectedEvent.title, selectedEvent.date)"
+          @update:model-value="toggleTest(selectedEvent!, $event === true)"
+        />
 
         <div class="flex gap-2">
           <NuxtLink

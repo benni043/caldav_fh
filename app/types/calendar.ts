@@ -49,6 +49,11 @@ export interface CalendarSegment {
 	duration: number;
 }
 
+export interface SubjectTest {
+	subject: string;
+	date: string;
+}
+
 export interface UrlId {
 	id: string;
 	lesson: string;
