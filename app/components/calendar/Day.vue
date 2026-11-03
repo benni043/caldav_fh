@@ -66,41 +66,6 @@
 			toast.add({ title: t("event.testSaveFailed"), color: "error" });
 		}
 	};
-
-	const highlightGroups = computed(() => {
-		const sorted = displayEvents.value.toSorted(
-			(a, b) => timeToMinutes(a.start) - timeToMinutes(b.start),
-		);
-
-		const groups: {
-			key: string;
-			title: string;
-			date: string;
-			start: string;
-			end: string;
-		}[] = [];
-
-		for (const event of sorted) {
-			const last = groups.at(-1);
-
-			if (last && last.title === event.title) {
-				if (timeToMinutes(event.end) > timeToMinutes(last.end)) {
-					last.end = event.end;
-				}
-			} else {
-				groups.push({
-					key: `${event.title}-${event.start}`,
-					title: event.title,
-					date: event.date,
-					start: event.start,
-					end: event.end,
-				});
-			}
-		}
-
-		// Filtered after grouping, so another subject in between keeps its own box
-		return groups.filter((group) => hasTest(group.title, group.date));
-	});
 </script>
 
 <template>
@@ -123,13 +88,6 @@
 			:event="event"
 			:style="getEventPosition(event.start, event.end, segments)"
 			@click="selectedEvent = event"
-		/>
-
-		<div
-			v-for="group in highlightGroups"
-			:key="group.key"
-			class="pointer-events-none absolute inset-x-0 z-21 rounded border-6 border-red-700 sm:rounded-md"
-			:style="getEventPosition(group.start, group.end, segments)"
 		/>
 
 		<ClientOnly>
